@@ -1,0 +1,14 @@
+[package]
+name = "lipsum"
+version = "0.1.0"
+authors = ["Martin Geisler <martin@geisler.net>"]
+description = """
+Lipsum is a lorem ipsum text generation library. Use this if you need
+some filler text for your application.
+"""
+documentation = "https://docs.rs/lipsum/"
+repository = "https://github.com/mgeisler/lipsum/"
+readme = "README.md"
+keywords = ["lorem-ipsum", "lorem", "ipsum", "text", "typography"]
+categories = ["text-processing"]
+license = "MIT"
