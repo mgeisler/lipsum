@@ -6,6 +6,16 @@ use rand::Rng;
 /// A bigram is simply two consecutive words.
 type Bigram<'a> = (&'a str, &'a str);
 
+/// Simple order two Markov chain implementation.
+///
+/// The [Markov chain] is a chain of order two, which means that it
+/// will use the previous two words (a bigram) when predicting the
+/// next word. This is normally enough to generate random text that
+/// looks somewhat plausible. The implementation is based on
+/// [Generating arbitrary text with Markov chains in Rust][blog post].
+///
+/// [Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
+/// [blog post]: https://blakewilliams.me/posts/generating-arbitrary-text-with-markov-chains-in-rust
 #[derive(Default)]
 pub struct MarkovChain<'a> {
     map: HashMap<Bigram<'a>, Vec<&'a str>>,
