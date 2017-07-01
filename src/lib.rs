@@ -21,8 +21,6 @@ pub struct MarkovChain<'a> {
     map: HashMap<Bigram<'a>, Vec<&'a str>>,
 }
 
-// Based on
-// https://blakewilliams.me/posts/generating-arbitrary-text-with-markov-chains-in-rust
 impl<'a> MarkovChain<'a> {
     /// Create a new Markov chain. It will use a default thread-local
     /// random number generator.
