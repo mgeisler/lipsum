@@ -1,5 +1,8 @@
 extern crate rand;
 
+#[macro_use]
+extern crate lazy_static;
+
 use std::collections::HashMap;
 use rand::Rng;
 
@@ -97,6 +100,16 @@ const LOREM_IPSUM: &str = include_str!("lorem-ipsum.txt");
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 const LIBER_PRIMUS: &str = include_str!("liber-primus.txt");
 
+lazy_static! {
+    /// Markov chain generating lorem ipsum text.
+    static ref LOREM_IPSUM_CHAIN: MarkovChain<'static> = {
+        let mut chain = MarkovChain::new();
+        chain.learn(LOREM_IPSUM);
+        chain.learn(LIBER_PRIMUS);
+        chain
+    };
+}
+
 /// Generate `n` words of lorem ipsum text. The output starts with
 /// "Lorem ipsum" and continues with the standard lorem ipsum text
 /// from [`LOREM_IPSUM`]. The text will become random if sufficiently
@@ -104,10 +117,7 @@ const LIBER_PRIMUS: &str = include_str!("liber-primus.txt");
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 pub fn lipsum(n: usize) -> String {
-    let mut chain = MarkovChain::new();
-    chain.learn(LOREM_IPSUM);
-    chain.learn(LIBER_PRIMUS);
-    chain.generate_from(n, ("Lorem", "ipsum"))
+    LOREM_IPSUM_CHAIN.generate_from(n, ("Lorem", "ipsum"))
 }
 
 
