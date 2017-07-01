@@ -12,3 +12,6 @@ readme = "README.md"
 keywords = ["lorem-ipsum", "lorem", "ipsum", "text", "typography"]
 categories = ["text-processing"]
 license = "MIT"
+
+[dependencies]
+rand = "0.3"
