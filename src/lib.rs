@@ -8,6 +8,13 @@
 /// [Wikipedia]: https://en.wikipedia.org/wiki/Lorem_ipsum
 const LOREM_IPSUM: &str = include_str!("lorem-ipsum.txt");
 
+/// The first book in Cicero's work De finibus bonorum et malorum ("On
+/// the ends of good and evil"). The lorem ipsum text in
+/// [`LOREM_IPSUM`] is derived from part of this text.
+///
+/// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
+const LIBER_PRIMUS: &str = include_str!("liber-primus.txt");
+
 /// Generate a standard lorem ipsum text.
 pub fn lipsum() -> String {
     String::from(LOREM_IPSUM)
