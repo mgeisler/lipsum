@@ -97,9 +97,17 @@ const LOREM_IPSUM: &str = include_str!("lorem-ipsum.txt");
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 const LIBER_PRIMUS: &str = include_str!("liber-primus.txt");
 
-/// Generate a standard lorem ipsum text.
-pub fn lipsum() -> String {
-    String::from(LOREM_IPSUM)
+/// Generate `n` words of lorem ipsum text. The output starts with
+/// "Lorem ipsum" and continues with the standard lorem ipsum text
+/// from [`LOREM_IPSUM`]. The text will become random if sufficiently
+/// long output is requested.
+///
+/// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
+pub fn lipsum(n: usize) -> String {
+    let mut chain = MarkovChain::new();
+    chain.learn(LOREM_IPSUM);
+    chain.learn(LIBER_PRIMUS);
+    chain.generate_from(n, ("Lorem", "ipsum"))
 }
 
 
@@ -109,7 +117,7 @@ mod tests {
 
     #[test]
     fn starts_with_lorem_ipsum() {
-        assert_eq!(&lipsum()[..11], "Lorem ipsum");
+        assert_eq!(&lipsum(10)[..11], "Lorem ipsum");
     }
 
     #[test]
