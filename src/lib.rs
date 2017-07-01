@@ -19,6 +19,6 @@ mod tests {
 
     #[test]
     fn starts_with_lorem_ipsum() {
-        assert!(lipsum().starts_with("Lorem ipsum"));
+        assert_eq!(&lipsum()[..11], "Lorem ipsum");
     }
 }
