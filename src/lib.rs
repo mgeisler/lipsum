@@ -1,3 +1,36 @@
+//! Lorem ipsum generator.
+//!
+//! This crate contains functions for generating pseudo-Latin lorem
+//! ipsum placeholder text. The traditional lorem ipsum text start
+//! like this:
+//!
+//! > Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+//! > eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+//! > enim ad minim veniam, quis nostrud exercitation ullamco laboris
+//! > nisi ut aliquip ex ea commodo consequat. [...]
+//!
+//! This text is in the [`LOREM_IPSUM`] constant. Random text looking
+//! like the above can be generated using the [`lipsum`] function.
+//! This function allows you to generate as much text as desired and
+//! each invocation will generate different text. This is done using a
+//! [Markov chain] based on both the [`LOREM_IPSUM`] and
+//! [`LIBER_PRIMUS`] texts. The latter constant holds the full text of
+//! the first book of a work by Cicero, of which the lorem ipsum text
+//! is a scrambled subset.
+//!
+//! The random looking text is generatd using a Markov chain of order
+//! two, which simply means that the next word is based on the
+//! previous two words in the input texts. The Markov chain can be
+//! used with other input texts by creating an instance of
+//! [`MarkovChain`] and calling its [`learn`] method.
+//!
+//! [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
+//! [`LIBER_PRIMUS`]: constant.LIBER_PRIMUS.html
+//! [`lipsum`]: fn.lipsum.html
+//! [`MarkovChain`]: struct.MarkovChain.html
+//! [`learn`]: struct.MarkovChain.html#method.learn
+//! [Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
+
 extern crate rand;
 
 #[macro_use]
