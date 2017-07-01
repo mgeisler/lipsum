@@ -47,8 +47,16 @@ impl<'a> MarkovChain<'a> {
         }
 
         let mut rng = rand::thread_rng();
+        let keys = self.map.keys().collect::<Vec<&(&str, &str)>>();
+        self.generate_from(n, **rng.choose(&keys).unwrap())
+    }
+
+    /// Generate `n` words worth of lorem ipsum text. The text will
+    /// start from the given bigram.
+    pub fn generate_from(&self, n: usize, from: Bigram<'a>) -> String {
+        let mut rng = rand::thread_rng(); // make part of struct
         let keys = self.map.keys().collect::<Vec<&Bigram>>();
-        let (mut a, mut b) = **rng.choose(&keys).unwrap();
+        let (mut a, mut b) = from;
         let mut sentence = String::from(a) + " " + b;
 
         for _ in 0..n {
@@ -108,6 +116,23 @@ mod tests {
     fn empty_chain() {
         let chain = MarkovChain::new();
         assert_eq!(chain.generate(10), "");
+    }
+
+    #[test]
+    fn generate_from() {
+        let mut chain = MarkovChain::new();
+        chain.learn("foo bar baz quuz");
+        assert_eq!(chain.generate_from(1, ("foo", "bar")), "foo bar baz");
+        assert_eq!(chain.generate_from(1, ("bar", "baz")), "bar baz quuz");
+    }
+
+    #[test]
+    fn generate_from_no_panic() {
+        // No panic when asked to generate a chain from a starting
+        // point that doesn't exist in the chain.
+        let mut chain = MarkovChain::new();
+        chain.learn("foo bar baz");
+        assert_eq!(chain.generate_from(1, ("xxx", "yyy")), "xxx yyy baz");
     }
 
     #[test]
