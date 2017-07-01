@@ -3,9 +3,11 @@
 /// well since each bigram (two consequtive words) is followed by just
 /// one other word. In other words, the Markov chain will always
 /// produce the same output and recreate the lorem ipsum text
-/// precisely.
+/// precisely. However, combining it with the full text in
+/// [`LIBER_PRIMUS`] works well.
 ///
 /// [Wikipedia]: https://en.wikipedia.org/wiki/Lorem_ipsum
+/// [`LIBER_PRIMUS`]: constant.LIBER_PRIMUS.html
 const LOREM_IPSUM: &str = include_str!("lorem-ipsum.txt");
 
 /// The first book in Cicero's work De finibus bonorum et malorum ("On
