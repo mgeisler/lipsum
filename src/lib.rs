@@ -95,7 +95,7 @@ impl<'a> MarkovChain<'a> {
         let (mut a, mut b) = from;
         let mut sentence = String::from(a) + " " + b;
 
-        for _ in 0..n {
+        for _ in 2..n {
             while !self.map.contains_key(&(a, b)) {
                 let new_key = **rng.choose(&keys).unwrap();
                 a = new_key.0;
@@ -164,6 +164,18 @@ mod tests {
     }
 
     #[test]
+    fn two_words_minimum() {
+        assert_eq!(lipsum(0).split_whitespace().count(), 2);
+        assert_eq!(lipsum(1).split_whitespace().count(), 2);
+        assert_eq!(lipsum(2).split_whitespace().count(), 2);
+    }
+
+    #[test]
+    fn more_than_two_words() {
+        assert_eq!(lipsum(17).split_whitespace().count(), 17);
+    }
+
+    #[test]
     fn empty_chain() {
         let chain = MarkovChain::new();
         assert_eq!(chain.generate(10), "");
@@ -173,8 +185,8 @@ mod tests {
     fn generate_from() {
         let mut chain = MarkovChain::new();
         chain.learn("foo bar baz quuz");
-        assert_eq!(chain.generate_from(1, ("foo", "bar")), "foo bar baz");
-        assert_eq!(chain.generate_from(1, ("bar", "baz")), "bar baz quuz");
+        assert_eq!(chain.generate_from(3, ("foo", "bar")), "foo bar baz");
+        assert_eq!(chain.generate_from(3, ("bar", "baz")), "bar baz quuz");
     }
 
     #[test]
@@ -183,7 +195,7 @@ mod tests {
         // point that doesn't exist in the chain.
         let mut chain = MarkovChain::new();
         chain.learn("foo bar baz");
-        assert_eq!(chain.generate_from(1, ("xxx", "yyy")), "xxx yyy baz");
+        assert_eq!(chain.generate_from(3, ("xxx", "yyy")), "xxx yyy baz");
     }
 
     #[test]
