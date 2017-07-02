@@ -50,6 +50,13 @@ bonorum et malorum* ("On the ends of good and evil"). The classic
 lorem ipsum text is derived from part of that book.
 
 
+## Release History
+
+### Version 0.1.0 — July 2nd, 2017
+
+First public release.
+
+
 ## License
 
 Lipsum can be distributed according to the [MIT license][mit].
