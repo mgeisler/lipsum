@@ -40,7 +40,7 @@ use std::collections::HashMap;
 use rand::Rng;
 
 /// A bigram is simply two consecutive words.
-type Bigram<'a> = (&'a str, &'a str);
+pub type Bigram<'a> = (&'a str, &'a str);
 
 /// Simple order two Markov chain implementation.
 ///
@@ -124,14 +124,14 @@ impl<'a> MarkovChain<'a> {
 ///
 /// [Wikipedia]: https://en.wikipedia.org/wiki/Lorem_ipsum
 /// [`LIBER_PRIMUS`]: constant.LIBER_PRIMUS.html
-pub const LOREM_IPSUM: &str = include_str!("lorem-ipsum.txt");
+pub const LOREM_IPSUM: &'static str = include_str!("lorem-ipsum.txt");
 
 /// The first book in Cicero's work De finibus bonorum et malorum ("On
 /// the ends of good and evil"). The lorem ipsum text in
 /// [`LOREM_IPSUM`] is derived from part of this text.
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
-pub const LIBER_PRIMUS: &str = include_str!("liber-primus.txt");
+pub const LIBER_PRIMUS: &'static str = include_str!("liber-primus.txt");
 
 lazy_static! {
     /// Markov chain generating lorem ipsum text.
