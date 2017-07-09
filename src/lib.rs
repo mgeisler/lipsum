@@ -54,7 +54,7 @@ pub type Bigram<'a> = (&'a str, &'a str);
 /// [blog post]: https://blakewilliams.me/posts/generating-arbitrary-text-with-markov-chains-in-rust
 #[derive(Default)]
 pub struct MarkovChain<'a> {
-    map: HashMap<Bigram<'a>, Vec<&'a str>>,
+    pub map: HashMap<Bigram<'a>, Vec<&'a str>>,
 }
 
 impl<'a> MarkovChain<'a> {
@@ -66,6 +66,19 @@ impl<'a> MarkovChain<'a> {
 
     /// Add new text to the Markov chain. This can be called several
     /// times to build up the chain.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lipsum::MarkovChain;
+    ///
+    /// let mut chain = MarkovChain::new();
+    /// chain.learn("red green blue");
+    /// assert_eq!(chain.map[&("red", "green")], vec!["blue"]);
+    ///
+    /// chain.learn("red green yellow");
+    /// assert_eq!(chain.map[&("red", "green")], vec!["blue", "yellow"]);
+    /// ```
     pub fn learn(&mut self, sentence: &'a str) {
         let words = sentence.split_whitespace().collect::<Vec<&str>>();
         for window in words.windows(3) {
@@ -76,6 +89,28 @@ impl<'a> MarkovChain<'a> {
 
     /// Generate `n` words worth of lorem ipsum text. The text will
     /// start from a random point in the Markov chain.
+    ///
+    /// See [`generate_from`] if you want to control the starting
+    /// point for the generated text.
+    ///
+    /// # Examples
+    ///
+    /// Generating the sounds of a grandfather clock:
+    ///
+    /// ```
+    /// use lipsum::MarkovChain;
+    ///
+    /// let mut chain = MarkovChain::new();
+    /// chain.learn("Tick, Tock, Tick, Tock, Ding! Tick, Tock, Ding! Ding!");
+    /// println!("{}", chain.generate(15));
+    /// ```
+    ///
+    /// The output looks like this:
+    ///
+    /// > Ding! Tick, Tock, Tick, Tock, Ding! Ding! Tock, Ding! Tick,
+    /// > Tock, Tick, Tock, Tick, Tock
+    ///
+    /// [`generate_from`]: struct.MarkovChain.html#method.generate_from
     pub fn generate(&self, n: usize) -> String {
         if self.map.is_empty() {
             // The learn method has not been called.
@@ -89,6 +124,10 @@ impl<'a> MarkovChain<'a> {
 
     /// Generate `n` words worth of lorem ipsum text. The text will
     /// start from the given bigram.
+    ///
+    /// Use [`generate`] if the starting point is not important.
+    ///
+    /// [`generate`]: struct.MarkovChain.html#method.generate
     pub fn generate_from(&self, n: usize, from: Bigram<'a>) -> String {
         let mut rng = rand::thread_rng(); // make part of struct
         let keys = self.map.keys().collect::<Vec<&Bigram>>();
