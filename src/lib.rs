@@ -54,7 +54,7 @@ pub type Bigram<'a> = (&'a str, &'a str);
 /// [blog post]: https://blakewilliams.me/posts/generating-arbitrary-text-with-markov-chains-in-rust
 #[derive(Default)]
 pub struct MarkovChain<'a> {
-    map: HashMap<Bigram<'a>, Vec<&'a str>>,
+    pub map: HashMap<Bigram<'a>, Vec<&'a str>>,
 }
 
 impl<'a> MarkovChain<'a> {
