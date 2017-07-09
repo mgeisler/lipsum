@@ -66,6 +66,19 @@ impl<'a> MarkovChain<'a> {
 
     /// Add new text to the Markov chain. This can be called several
     /// times to build up the chain.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lipsum::MarkovChain;
+    ///
+    /// let mut chain = MarkovChain::new();
+    /// chain.learn("red green blue");
+    /// assert_eq!(chain.map[&("red", "green")], vec!["blue"]);
+    ///
+    /// chain.learn("red green yellow");
+    /// assert_eq!(chain.map[&("red", "green")], vec!["blue", "yellow"]);
+    /// ```
     pub fn learn(&mut self, sentence: &'a str) {
         let words = sentence.split_whitespace().collect::<Vec<&str>>();
         for window in words.windows(3) {
