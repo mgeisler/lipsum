@@ -89,6 +89,28 @@ impl<'a> MarkovChain<'a> {
 
     /// Generate `n` words worth of lorem ipsum text. The text will
     /// start from a random point in the Markov chain.
+    ///
+    /// See [`generate_from`] if you want to control the starting
+    /// point for the generated text.
+    ///
+    /// # Examples
+    ///
+    /// Generating the sounds of a grandfather clock:
+    ///
+    /// ```
+    /// use lipsum::MarkovChain;
+    ///
+    /// let mut chain = MarkovChain::new();
+    /// chain.learn("Tick, Tock, Tick, Tock, Ding! Tick, Tock, Ding! Ding!");
+    /// println!("{}", chain.generate(15));
+    /// ```
+    ///
+    /// The output looks like this:
+    ///
+    /// > Ding! Tick, Tock, Tick, Tock, Ding! Ding! Tock, Ding! Tick,
+    /// > Tock, Tick, Tock, Tick, Tock
+    ///
+    /// [`generate_from`]: struct.MarkovChain.html#method.generate_from
     pub fn generate(&self, n: usize) -> String {
         if self.map.is_empty() {
             // The learn method has not been called.
