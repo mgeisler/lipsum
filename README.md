@@ -15,7 +15,7 @@ application.
 Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-lipsum = "0.1"
+lipsum = "0.2"
 ```
 
 and this to your crate root:
@@ -51,6 +51,10 @@ lorem ipsum text is derived from part of that book.
 
 
 ## Release History
+
+### Version 0.2.0 — July 10th, 2017
+
+Rust version 1.6.0 is now supported. This is checked with TravisCI.
 
 ### Version 0.1.0 — July 2nd, 2017
 
