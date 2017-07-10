@@ -13,6 +13,10 @@ keywords = ["lorem-ipsum", "lorem", "ipsum", "text", "typography"]
 categories = ["text-processing"]
 license = "MIT"
 
+[badges]
+travis-ci = { repository = "mgeisler/lipsum" }
+appveyor = { repository = "mgeisler/lipsum" }
+
 [dependencies]
 rand = "0.3"
 lazy_static = "0.2"
