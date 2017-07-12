@@ -112,14 +112,7 @@ impl<'a> MarkovChain<'a> {
     ///
     /// [`generate_from`]: struct.MarkovChain.html#method.generate_from
     pub fn generate(&self, n: usize) -> String {
-        if self.map.is_empty() {
-            // The learn method has not been called.
-            return String::new();
-        }
-
-        let mut rng = rand::thread_rng();
-        let keys = self.map.keys().collect::<Vec<&(&str, &str)>>();
-        self.generate_from(n, **rng.choose(&keys).unwrap())
+        join_words(self.iter().take(n))
     }
 
     /// Generate `n` words worth of lorem ipsum text. The text will
@@ -129,27 +122,68 @@ impl<'a> MarkovChain<'a> {
     ///
     /// [`generate`]: struct.MarkovChain.html#method.generate
     pub fn generate_from(&self, n: usize, from: Bigram<'a>) -> String {
-        let mut rng = rand::thread_rng(); // make part of struct
-        let keys = self.map.keys().collect::<Vec<&Bigram>>();
-        let (mut a, mut b) = from;
-        let mut sentence = String::from(a) + " " + b;
+        join_words(self.iter_from(from).take(n))
+    }
 
-        for _ in 2..n {
-            while !self.map.contains_key(&(a, b)) {
-                let new_key = **rng.choose(&keys).unwrap();
-                a = new_key.0;
-                b = new_key.1;
-            }
+    /// Make a never-ending iterator over the words in the Markov
+    /// chain. The iterator starts at a random point in the chain.
+    pub fn iter(&self) -> Words {
+        let keys = self.map.keys().collect::<Vec<&(&str, &str)>>();
+        let state = if keys.is_empty() {
+            ("", "")
+        } else {
+            let mut rng = rand::thread_rng();
+            **rng.choose(&keys).unwrap()
+        };
+        Words { map: &self.map, keys: keys, state: state }
+    }
 
-            let next_words = &self.map[&(a, b)];
-            let c = rng.choose(next_words).unwrap();
-            sentence.push(' ');
-            sentence.push_str(c);
-            a = b;
-            b = c;
+    /// Make a never-ending iterator over the words in the Markov
+    /// chain. The iterator starts at the given bigram.
+    pub fn iter_from(&self, from: Bigram<'a>) -> Words {
+        let keys = self.map.keys().collect::<Vec<&(&str, &str)>>();
+        Words { map: &self.map, keys: keys, state: from }
+    }
+}
+
+pub struct Words<'a> {
+    map: &'a HashMap<Bigram<'a>, Vec<&'a str>>,
+    keys: Vec<&'a Bigram<'a>>,
+    state: Bigram<'a>,
+}
+
+impl<'a> Iterator for Words<'a> {
+    type Item = &'a str;
+
+    fn next(&mut self) -> Option<&'a str> {
+        if self.map.is_empty() {
+            return None;
         }
 
-        return sentence;
+        let result = Some(self.state.0);
+        let mut rng = rand::thread_rng();
+
+        while !self.map.contains_key(&self.state) {
+            self.state = **rng.choose(&self.keys).unwrap();
+        }
+        let next_words = &self.map[&self.state];
+        let next = rng.choose(next_words).unwrap();
+        self.state = (self.state.1, next);
+        result
+    }
+}
+
+fn join_words<'a, I: Iterator<Item = &'a str>>(mut words: I) -> String {
+    match words.next() {
+        None => String::new(),
+        Some(word) => {
+            let mut sentence = String::from(word);
+            for word in words {
+                sentence.push(' ');
+                sentence.push_str(word);
+            }
+            sentence
+        }
     }
 }
 
@@ -203,15 +237,18 @@ mod tests {
     }
 
     #[test]
-    fn two_words_minimum() {
-        assert_eq!(lipsum(0).split_whitespace().count(), 2);
-        assert_eq!(lipsum(1).split_whitespace().count(), 2);
-        assert_eq!(lipsum(2).split_whitespace().count(), 2);
+    fn generate_zero_words() {
+        assert_eq!(lipsum(0).split_whitespace().count(), 0);
     }
 
     #[test]
-    fn more_than_two_words() {
-        assert_eq!(lipsum(17).split_whitespace().count(), 17);
+    fn generate_one_word() {
+        assert_eq!(lipsum(1).split_whitespace().count(), 1);
+    }
+
+    #[test]
+    fn generate_two_words() {
+        assert_eq!(lipsum(2).split_whitespace().count(), 2);
     }
 
     #[test]
@@ -223,9 +260,23 @@ mod tests {
     #[test]
     fn generate_from() {
         let mut chain = MarkovChain::new();
-        chain.learn("foo bar baz quuz");
-        assert_eq!(chain.generate_from(3, ("foo", "bar")), "foo bar baz");
-        assert_eq!(chain.generate_from(3, ("bar", "baz")), "bar baz quuz");
+        chain.learn("red orange yellow green blue indigo violet");
+        assert_eq!(chain.generate_from(5, ("orange", "yellow")),
+                   "orange yellow green blue indigo");
+    }
+
+    #[test]
+    fn generate_last_bigram() {
+        // The bigram "yyy zzz" will not be present in the Markov
+        // chain's map, and so we will not generate "xxx yyy zzz" as
+        // one would expect. The chain moves from state "xxx yyy" to
+        // "yyy zzz", but sees that as invalid state and resets itsel
+        // back to "xxx yyy".
+        let mut chain = MarkovChain::new();
+        chain.learn("xxx yyy zzz");
+        // We use assert! instead of assert_ne! to support early
+        // versions of Rust.
+        assert!(chain.generate_from(3, ("xxx", "yyy")) != "xxx yyy zzz");
     }
 
     #[test]
@@ -234,7 +285,7 @@ mod tests {
         // point that doesn't exist in the chain.
         let mut chain = MarkovChain::new();
         chain.learn("foo bar baz");
-        assert_eq!(chain.generate_from(3, ("xxx", "yyy")), "xxx yyy baz");
+        chain.generate_from(3, ("xxx", "yyy"));
     }
 
     #[test]
