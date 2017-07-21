@@ -33,9 +33,7 @@
 
 extern crate rand;
 
-#[macro_use]
-extern crate lazy_static;
-
+use std::cell::RefCell;
 use std::collections::HashMap;
 use rand::Rng;
 
@@ -52,16 +50,19 @@ pub type Bigram<'a> = (&'a str, &'a str);
 ///
 /// [Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
 /// [blog post]: https://blakewilliams.me/posts/generating-arbitrary-text-with-markov-chains-in-rust
-#[derive(Default)]
 pub struct MarkovChain<'a> {
     map: HashMap<Bigram<'a>, Vec<&'a str>>,
+    rng: rand::ThreadRng,
 }
 
 impl<'a> MarkovChain<'a> {
     /// Create a new Markov chain. It will use a default thread-local
     /// random number generator.
     pub fn new() -> MarkovChain<'a> {
-        MarkovChain { map: HashMap::new() }
+        MarkovChain {
+            map: HashMap::new(),
+            rng: rand::thread_rng(),
+        }
     }
 
     /// Add new text to the Markov chain. This can be called several
@@ -128,7 +129,7 @@ impl<'a> MarkovChain<'a> {
     /// > Tock, Tick, Tock, Tick, Tock
     ///
     /// [`generate_from`]: struct.MarkovChain.html#method.generate_from
-    pub fn generate(&self, n: usize) -> String {
+    pub fn generate(&mut self, n: usize) -> String {
         join_words(self.iter().take(n))
     }
 
@@ -138,33 +139,43 @@ impl<'a> MarkovChain<'a> {
     /// Use [`generate`] if the starting point is not important.
     ///
     /// [`generate`]: struct.MarkovChain.html#method.generate
-    pub fn generate_from(&self, n: usize, from: Bigram<'a>) -> String {
+    pub fn generate_from(&mut self, n: usize, from: Bigram<'a>) -> String {
         join_words(self.iter_from(from).take(n))
     }
 
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at a random point in the chain.
-    pub fn iter(&self) -> Words {
+    pub fn iter(&mut self) -> Words {
         let keys = self.map.keys().collect::<Vec<&(&str, &str)>>();
         let state = if keys.is_empty() {
             ("", "")
         } else {
-            let mut rng = rand::thread_rng();
-            **rng.choose(&keys).unwrap()
+            **self.rng.choose(&keys).unwrap()
         };
-        Words { map: &self.map, keys: keys, state: state }
+        Words {
+            map: &self.map,
+            rng: &mut self.rng,
+            keys: keys,
+            state: state,
+        }
     }
 
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at the given bigram.
-    pub fn iter_from(&self, from: Bigram<'a>) -> Words {
+    pub fn iter_from(&mut self, from: Bigram<'a>) -> Words {
         let keys = self.map.keys().collect::<Vec<&(&str, &str)>>();
-        Words { map: &self.map, keys: keys, state: from }
+        Words {
+            map: &self.map,
+            rng: &mut self.rng,
+            keys: keys,
+            state: from,
+        }
     }
 }
 
 pub struct Words<'a> {
     map: &'a HashMap<Bigram<'a>, Vec<&'a str>>,
+    rng: &'a mut rand::ThreadRng,
     keys: Vec<&'a Bigram<'a>>,
     state: Bigram<'a>,
 }
@@ -178,13 +189,12 @@ impl<'a> Iterator for Words<'a> {
         }
 
         let result = Some(self.state.0);
-        let mut rng = rand::thread_rng();
 
         while !self.map.contains_key(&self.state) {
-            self.state = **rng.choose(&self.keys).unwrap();
+            self.state = **self.rng.choose(&self.keys).unwrap();
         }
         let next_words = &self.map[&self.state];
-        let next = rng.choose(next_words).unwrap();
+        let next = self.rng.choose(next_words).unwrap();
         self.state = (self.state.1, next);
         result
     }
@@ -223,14 +233,14 @@ pub const LOREM_IPSUM: &'static str = include_str!("lorem-ipsum.txt");
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 pub const LIBER_PRIMUS: &'static str = include_str!("liber-primus.txt");
 
-lazy_static! {
-    /// Markov chain generating lorem ipsum text.
-    static ref LOREM_IPSUM_CHAIN: MarkovChain<'static> = {
+thread_local! {
+    // Markov chain generating lorem ipsum text.
+    static LOREM_IPSUM_CHAIN: RefCell<MarkovChain<'static>> = {
         let mut chain = MarkovChain::new();
         chain.learn(LOREM_IPSUM);
         chain.learn(LIBER_PRIMUS);
-        chain
-    };
+        RefCell::new(chain)
+    }
 }
 
 /// Generate `n` words of lorem ipsum text. The output starts with
@@ -240,7 +250,10 @@ lazy_static! {
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 pub fn lipsum(n: usize) -> String {
-    LOREM_IPSUM_CHAIN.generate_from(n, ("Lorem", "ipsum"))
+    LOREM_IPSUM_CHAIN.with(|cell| {
+                               let mut chain = cell.borrow_mut();
+                               chain.generate_from(n, ("Lorem", "ipsum"))
+                           })
 }
 
 
@@ -270,7 +283,7 @@ mod tests {
 
     #[test]
     fn empty_chain() {
-        let chain = MarkovChain::new();
+        let mut chain = MarkovChain::new();
         assert_eq!(chain.generate(10), "");
     }
 
