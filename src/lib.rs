@@ -52,7 +52,7 @@ pub type Bigram<'a> = (&'a str, &'a str);
 /// [blog post]: https://blakewilliams.me/posts/generating-arbitrary-text-with-markov-chains-in-rust
 pub struct MarkovChain<'a> {
     map: HashMap<Bigram<'a>, Vec<&'a str>>,
-    rng: rand::ThreadRng,
+    rng: Box<Rng>,
 }
 
 impl<'a> MarkovChain<'a> {
@@ -61,7 +61,7 @@ impl<'a> MarkovChain<'a> {
     pub fn new() -> MarkovChain<'a> {
         MarkovChain {
             map: HashMap::new(),
-            rng: rand::thread_rng(),
+            rng: Box::new(rand::thread_rng()),
         }
     }
 
@@ -150,7 +150,7 @@ impl<'a> MarkovChain<'a> {
         let state = if keys.is_empty() {
             ("", "")
         } else {
-            **self.rng.choose(&keys).unwrap()
+            **choose(&mut self.rng, &keys).unwrap()
         };
         Words {
             map: &self.map,
@@ -175,7 +175,7 @@ impl<'a> MarkovChain<'a> {
 
 pub struct Words<'a> {
     map: &'a HashMap<Bigram<'a>, Vec<&'a str>>,
-    rng: &'a mut rand::ThreadRng,
+    rng: &'a mut rand::Rng,
     keys: Vec<&'a Bigram<'a>>,
     state: Bigram<'a>,
 }
@@ -191,12 +191,25 @@ impl<'a> Iterator for Words<'a> {
         let result = Some(self.state.0);
 
         while !self.map.contains_key(&self.state) {
-            self.state = **self.rng.choose(&self.keys).unwrap();
+            self.state = **choose(self.rng, &self.keys).unwrap();
         }
         let next_words = &self.map[&self.state];
-        let next = self.rng.choose(next_words).unwrap();
+        let next = choose(self.rng, next_words).unwrap();
         self.state = (self.state.1, next);
         result
+    }
+}
+
+/// Choose a random element from a slice.
+///
+/// Unlike `Rng::choose`, this function does not require the RNG to be
+/// Sized and thus works on any random number generator.
+fn choose<'a, T>(rng: &mut Rng, values: &'a [T]) -> Option<&'a T> {
+    if values.is_empty() {
+        None
+    } else {
+        let idx = (values.len() as f32 * rng.next_f32()) as usize;
+        Some(&values[idx])
     }
 }
 
