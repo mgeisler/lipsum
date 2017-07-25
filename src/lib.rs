@@ -65,6 +65,12 @@ impl<'a> MarkovChain<'a> {
         }
     }
 
+    /// Create a new Markov chain that uses the given random number
+    /// generator.
+    pub fn new_with_rng(rng: Box<Rng>) -> MarkovChain<'a> {
+        MarkovChain { map: HashMap::new(), rng: rng }
+    }
+
     /// Add new text to the Markov chain. This can be called several
     /// times to build up the chain.
     ///
