@@ -50,24 +50,26 @@ pub type Bigram<'a> = (&'a str, &'a str);
 ///
 /// [Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
 /// [blog post]: https://blakewilliams.me/posts/generating-arbitrary-text-with-markov-chains-in-rust
-pub struct MarkovChain<'a> {
+pub struct MarkovChain<'a, R: Rng> {
     map: HashMap<Bigram<'a>, Vec<&'a str>>,
-    rng: Box<Rng>,
+    rng: R,
 }
 
-impl<'a> MarkovChain<'a> {
+impl<'a> MarkovChain<'a, rand::ThreadRng> {
     /// Create a new Markov chain. It will use a default thread-local
     /// random number generator.
-    pub fn new() -> MarkovChain<'a> {
+    pub fn new() -> MarkovChain<'a, rand::ThreadRng> {
         MarkovChain {
             map: HashMap::new(),
-            rng: Box::new(rand::thread_rng()),
+            rng: rand::thread_rng(),
         }
     }
+}
 
+impl<'a, R: Rng> MarkovChain<'a, R> {
     /// Create a new Markov chain that uses the given random number
     /// generator.
-    pub fn new_with_rng(rng: Box<Rng>) -> MarkovChain<'a> {
+    pub fn new_with_rng(rng: R) -> MarkovChain<'a, R> {
         MarkovChain { map: HashMap::new(), rng: rng }
     }
 
@@ -254,7 +256,7 @@ pub const LIBER_PRIMUS: &'static str = include_str!("liber-primus.txt");
 
 thread_local! {
     // Markov chain generating lorem ipsum text.
-    static LOREM_IPSUM_CHAIN: RefCell<MarkovChain<'static>> = {
+    static LOREM_IPSUM_CHAIN: RefCell<MarkovChain<'static, rand::ThreadRng>> = {
         let mut chain = MarkovChain::new();
         chain.learn(LOREM_IPSUM);
         chain.learn(LIBER_PRIMUS);
