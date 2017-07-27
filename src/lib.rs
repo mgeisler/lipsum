@@ -119,6 +119,23 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
         self.map.len()
     }
 
+    /// Returns `true` if the Markov chain has no states.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lipsum::MarkovChain;
+    ///
+    /// let mut chain = MarkovChain::new();
+    /// assert!(chain.is_empty());
+    ///
+    /// chain.learn("foo bar baz");
+    /// assert!(!chain.is_empty());
+    /// ```
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Get the possible words following the given bigram, or `None`
     /// if the state is invalid.
     ///
@@ -177,7 +194,7 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at a random point in the chain.
     pub fn iter(&mut self) -> Words {
-        let state = if self.keys.is_empty() {
+        let state = if self.is_empty() {
             ("", "")
         } else {
             *choose(&mut self.rng, &self.keys).unwrap()
