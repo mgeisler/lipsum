@@ -60,11 +60,7 @@ impl<'a> MarkovChain<'a, rand::ThreadRng> {
     /// Create a new Markov chain. It will use a default thread-local
     /// random number generator.
     pub fn new() -> MarkovChain<'a, rand::ThreadRng> {
-        MarkovChain {
-            map: HashMap::new(),
-            keys: Vec::new(),
-            rng: rand::thread_rng(),
-        }
+        MarkovChain::new_with_rng(rand::thread_rng())
     }
 }
 
