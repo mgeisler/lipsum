@@ -52,6 +52,7 @@ pub type Bigram<'a> = (&'a str, &'a str);
 /// [blog post]: https://blakewilliams.me/posts/generating-arbitrary-text-with-markov-chains-in-rust
 pub struct MarkovChain<'a, R: Rng> {
     map: HashMap<Bigram<'a>, Vec<&'a str>>,
+    keys: Vec<Bigram<'a>>,
     rng: R,
 }
 
@@ -61,6 +62,7 @@ impl<'a> MarkovChain<'a, rand::ThreadRng> {
     pub fn new() -> MarkovChain<'a, rand::ThreadRng> {
         MarkovChain {
             map: HashMap::new(),
+            keys: Vec::new(),
             rng: rand::thread_rng(),
         }
     }
@@ -70,7 +72,11 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// Create a new Markov chain that uses the given random number
     /// generator.
     pub fn new_with_rng(rng: R) -> MarkovChain<'a, R> {
-        MarkovChain { map: HashMap::new(), rng: rng }
+        MarkovChain {
+            map: HashMap::new(),
+            keys: Vec::new(),
+            rng: rng,
+        }
     }
 
     /// Add new text to the Markov chain. This can be called several
@@ -94,6 +100,9 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
             let (a, b, c) = (window[0], window[1], window[2]);
             self.map.entry((a, b)).or_insert_with(Vec::new).push(c);
         }
+        // Sync the keys with the current map.
+        self.keys = self.map.keys().cloned().collect();
+        self.keys.sort();
     }
 
     /// Get the possible words following the given bigram, or `None`
@@ -154,16 +163,15 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at a random point in the chain.
     pub fn iter(&mut self) -> Words {
-        let keys = self.map.keys().collect::<Vec<&(&str, &str)>>();
-        let state = if keys.is_empty() {
+        let state = if self.keys.is_empty() {
             ("", "")
         } else {
-            **choose(&mut self.rng, &keys).unwrap()
+            *choose(&mut self.rng, &self.keys).unwrap()
         };
         Words {
             map: &self.map,
             rng: &mut self.rng,
-            keys: keys,
+            keys: &self.keys,
             state: state,
         }
     }
@@ -171,11 +179,10 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at the given bigram.
     pub fn iter_from(&mut self, from: Bigram<'a>) -> Words {
-        let keys = self.map.keys().collect::<Vec<&(&str, &str)>>();
         Words {
             map: &self.map,
             rng: &mut self.rng,
-            keys: keys,
+            keys: &self.keys,
             state: from,
         }
     }
@@ -184,7 +191,7 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
 pub struct Words<'a> {
     map: &'a HashMap<Bigram<'a>, Vec<&'a str>>,
     rng: &'a mut rand::Rng,
-    keys: Vec<&'a Bigram<'a>>,
+    keys: &'a Vec<Bigram<'a>>,
     state: Bigram<'a>,
 }
 
@@ -199,7 +206,7 @@ impl<'a> Iterator for Words<'a> {
         let result = Some(self.state.0);
 
         while !self.map.contains_key(&self.state) {
-            self.state = **choose(self.rng, &self.keys).unwrap();
+            self.state = *choose(self.rng, self.keys).unwrap();
         }
         let next_words = &self.map[&self.state];
         let next = choose(self.rng, next_words).unwrap();
@@ -348,5 +355,18 @@ mod tests {
         assert_eq!(map.len(), 2);
         assert_eq!(map[&("foo", "bar")], vec!["baz"]);
         assert_eq!(map[&("bar", "baz")], vec!["quuz"]);
+    }
+
+    #[test]
+    fn new_with_rng() {
+        extern crate rand;
+        use rand::SeedableRng;
+
+        let rng = rand::XorShiftRng::from_seed([1, 2, 3, 4]);
+        let mut chain = MarkovChain::new_with_rng(rng);
+        chain.learn("foo bar x y z");
+        chain.learn("foo bar a b c");
+
+        assert_eq!(chain.generate(15), "a b b x y b x y x y x y bar x y");
     }
 }
