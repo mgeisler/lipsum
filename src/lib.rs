@@ -265,6 +265,8 @@ thread_local! {
     // Markov chain generating lorem ipsum text.
     static LOREM_IPSUM_CHAIN: RefCell<MarkovChain<'static, rand::ThreadRng>> = {
         let mut chain = MarkovChain::new();
+        // The cost of learning increases as more and more text is
+        // added, so we start with the smallest text.
         chain.learn(LOREM_IPSUM);
         chain.learn(LIBER_PRIMUS);
         RefCell::new(chain)
