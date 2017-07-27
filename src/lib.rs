@@ -33,9 +33,7 @@
 
 extern crate rand;
 
-#[macro_use]
-extern crate lazy_static;
-
+use std::cell::RefCell;
 use std::collections::HashMap;
 use rand::Rng;
 
@@ -52,16 +50,29 @@ pub type Bigram<'a> = (&'a str, &'a str);
 ///
 /// [Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
 /// [blog post]: https://blakewilliams.me/posts/generating-arbitrary-text-with-markov-chains-in-rust
-#[derive(Default)]
-pub struct MarkovChain<'a> {
-    pub map: HashMap<Bigram<'a>, Vec<&'a str>>,
+pub struct MarkovChain<'a, R: Rng> {
+    map: HashMap<Bigram<'a>, Vec<&'a str>>,
+    keys: Vec<Bigram<'a>>,
+    rng: R,
 }
 
-impl<'a> MarkovChain<'a> {
+impl<'a> MarkovChain<'a, rand::ThreadRng> {
     /// Create a new Markov chain. It will use a default thread-local
     /// random number generator.
-    pub fn new() -> MarkovChain<'a> {
-        MarkovChain { map: HashMap::new() }
+    pub fn new() -> MarkovChain<'a, rand::ThreadRng> {
+        MarkovChain::new_with_rng(rand::thread_rng())
+    }
+}
+
+impl<'a, R: Rng> MarkovChain<'a, R> {
+    /// Create a new Markov chain that uses the given random number
+    /// generator.
+    pub fn new_with_rng(rng: R) -> MarkovChain<'a, R> {
+        MarkovChain {
+            map: HashMap::new(),
+            keys: Vec::new(),
+            rng: rng,
+        }
     }
 
     /// Add new text to the Markov chain. This can be called several
@@ -74,10 +85,10 @@ impl<'a> MarkovChain<'a> {
     ///
     /// let mut chain = MarkovChain::new();
     /// chain.learn("red green blue");
-    /// assert_eq!(chain.map[&("red", "green")], vec!["blue"]);
+    /// assert_eq!(chain.words(("red", "green")), Some(&vec!["blue"]));
     ///
     /// chain.learn("red green yellow");
-    /// assert_eq!(chain.map[&("red", "green")], vec!["blue", "yellow"]);
+    /// assert_eq!(chain.words(("red", "green")), Some(&vec!["blue", "yellow"]));
     /// ```
     pub fn learn(&mut self, sentence: &'a str) {
         let words = sentence.split_whitespace().collect::<Vec<&str>>();
@@ -85,6 +96,26 @@ impl<'a> MarkovChain<'a> {
             let (a, b, c) = (window[0], window[1], window[2]);
             self.map.entry((a, b)).or_insert_with(Vec::new).push(c);
         }
+        // Sync the keys with the current map.
+        self.keys = self.map.keys().cloned().collect();
+        self.keys.sort();
+    }
+
+    /// Get the possible words following the given bigram, or `None`
+    /// if the state is invalid.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lipsum::MarkovChain;
+    ///
+    /// let mut chain = MarkovChain::new();
+    /// chain.learn("red green blue");
+    /// assert_eq!(chain.words(("red", "green")), Some(&vec!["blue"]));
+    /// assert_eq!(chain.words(("foo", "bar")), None);
+    /// ```
+    pub fn words(&self, state: Bigram<'a>) -> Option<&Vec<&str>> {
+        self.map.get(&state)
     }
 
     /// Generate `n` words worth of lorem ipsum text. The text will
@@ -111,7 +142,7 @@ impl<'a> MarkovChain<'a> {
     /// > Tock, Tick, Tock, Tick, Tock
     ///
     /// [`generate_from`]: struct.MarkovChain.html#method.generate_from
-    pub fn generate(&self, n: usize) -> String {
+    pub fn generate(&mut self, n: usize) -> String {
         join_words(self.iter().take(n))
     }
 
@@ -121,34 +152,42 @@ impl<'a> MarkovChain<'a> {
     /// Use [`generate`] if the starting point is not important.
     ///
     /// [`generate`]: struct.MarkovChain.html#method.generate
-    pub fn generate_from(&self, n: usize, from: Bigram<'a>) -> String {
+    pub fn generate_from(&mut self, n: usize, from: Bigram<'a>) -> String {
         join_words(self.iter_from(from).take(n))
     }
 
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at a random point in the chain.
-    pub fn iter(&self) -> Words {
-        let keys = self.map.keys().collect::<Vec<&(&str, &str)>>();
-        let state = if keys.is_empty() {
+    pub fn iter(&mut self) -> Words {
+        let state = if self.keys.is_empty() {
             ("", "")
         } else {
-            let mut rng = rand::thread_rng();
-            **rng.choose(&keys).unwrap()
+            *choose(&mut self.rng, &self.keys).unwrap()
         };
-        Words { map: &self.map, keys: keys, state: state }
+        Words {
+            map: &self.map,
+            rng: &mut self.rng,
+            keys: &self.keys,
+            state: state,
+        }
     }
 
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at the given bigram.
-    pub fn iter_from(&self, from: Bigram<'a>) -> Words {
-        let keys = self.map.keys().collect::<Vec<&(&str, &str)>>();
-        Words { map: &self.map, keys: keys, state: from }
+    pub fn iter_from(&mut self, from: Bigram<'a>) -> Words {
+        Words {
+            map: &self.map,
+            rng: &mut self.rng,
+            keys: &self.keys,
+            state: from,
+        }
     }
 }
 
 pub struct Words<'a> {
     map: &'a HashMap<Bigram<'a>, Vec<&'a str>>,
-    keys: Vec<&'a Bigram<'a>>,
+    rng: &'a mut rand::Rng,
+    keys: &'a Vec<Bigram<'a>>,
     state: Bigram<'a>,
 }
 
@@ -161,15 +200,27 @@ impl<'a> Iterator for Words<'a> {
         }
 
         let result = Some(self.state.0);
-        let mut rng = rand::thread_rng();
 
         while !self.map.contains_key(&self.state) {
-            self.state = **rng.choose(&self.keys).unwrap();
+            self.state = *choose(self.rng, self.keys).unwrap();
         }
         let next_words = &self.map[&self.state];
-        let next = rng.choose(next_words).unwrap();
+        let next = choose(self.rng, next_words).unwrap();
         self.state = (self.state.1, next);
         result
+    }
+}
+
+/// Choose a random element from a slice.
+///
+/// Unlike `Rng::choose`, this function does not require the RNG to be
+/// Sized and thus works on any random number generator.
+fn choose<'a, T>(rng: &mut Rng, values: &'a [T]) -> Option<&'a T> {
+    if values.is_empty() {
+        None
+    } else {
+        let idx = (values.len() as f32 * rng.next_f32()) as usize;
+        Some(&values[idx])
     }
 }
 
@@ -206,14 +257,16 @@ pub const LOREM_IPSUM: &'static str = include_str!("lorem-ipsum.txt");
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 pub const LIBER_PRIMUS: &'static str = include_str!("liber-primus.txt");
 
-lazy_static! {
-    /// Markov chain generating lorem ipsum text.
-    static ref LOREM_IPSUM_CHAIN: MarkovChain<'static> = {
+thread_local! {
+    // Markov chain generating lorem ipsum text.
+    static LOREM_IPSUM_CHAIN: RefCell<MarkovChain<'static, rand::ThreadRng>> = {
         let mut chain = MarkovChain::new();
+        // The cost of learning increases as more and more text is
+        // added, so we start with the smallest text.
         chain.learn(LOREM_IPSUM);
         chain.learn(LIBER_PRIMUS);
-        chain
-    };
+        RefCell::new(chain)
+    }
 }
 
 /// Generate `n` words of lorem ipsum text. The output starts with
@@ -223,7 +276,10 @@ lazy_static! {
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 pub fn lipsum(n: usize) -> String {
-    LOREM_IPSUM_CHAIN.generate_from(n, ("Lorem", "ipsum"))
+    LOREM_IPSUM_CHAIN.with(|cell| {
+                               let mut chain = cell.borrow_mut();
+                               chain.generate_from(n, ("Lorem", "ipsum"))
+                           })
 }
 
 
@@ -253,7 +309,7 @@ mod tests {
 
     #[test]
     fn empty_chain() {
-        let chain = MarkovChain::new();
+        let mut chain = MarkovChain::new();
         assert_eq!(chain.generate(10), "");
     }
 
@@ -297,5 +353,18 @@ mod tests {
         assert_eq!(map.len(), 2);
         assert_eq!(map[&("foo", "bar")], vec!["baz"]);
         assert_eq!(map[&("bar", "baz")], vec!["quuz"]);
+    }
+
+    #[test]
+    fn new_with_rng() {
+        extern crate rand;
+        use rand::SeedableRng;
+
+        let rng = rand::XorShiftRng::from_seed([1, 2, 3, 4]);
+        let mut chain = MarkovChain::new_with_rng(rng);
+        chain.learn("foo bar x y z");
+        chain.learn("foo bar a b c");
+
+        assert_eq!(chain.generate(15), "a b b x y b x y x y x y bar x y");
     }
 }
