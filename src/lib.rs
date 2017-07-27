@@ -101,6 +101,24 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
         self.keys.sort();
     }
 
+    /// Returs the number of states in the Markov chain.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lipsum::MarkovChain;
+    ///
+    /// let mut chain = MarkovChain::new();
+    /// assert_eq!(chain.len(), 0);
+    ///
+    /// chain.learn("red orange yellow green blue indigo");
+    /// assert_eq!(chain.len(), 4);
+    /// ```
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.map.len()
+    }
+
     /// Get the possible words following the given bigram, or `None`
     /// if the state is invalid.
     ///
