@@ -54,7 +54,7 @@ pub type Bigram<'a> = (&'a str, &'a str);
 /// [blog post]: https://blakewilliams.me/posts/generating-arbitrary-text-with-markov-chains-in-rust
 #[derive(Default)]
 pub struct MarkovChain<'a> {
-    pub map: HashMap<Bigram<'a>, Vec<&'a str>>,
+    map: HashMap<Bigram<'a>, Vec<&'a str>>,
 }
 
 impl<'a> MarkovChain<'a> {
@@ -74,10 +74,10 @@ impl<'a> MarkovChain<'a> {
     ///
     /// let mut chain = MarkovChain::new();
     /// chain.learn("red green blue");
-    /// assert_eq!(chain.map[&("red", "green")], vec!["blue"]);
+    /// assert_eq!(chain.words(("red", "green")), Some(&vec!["blue"]));
     ///
     /// chain.learn("red green yellow");
-    /// assert_eq!(chain.map[&("red", "green")], vec!["blue", "yellow"]);
+    /// assert_eq!(chain.words(("red", "green")), Some(&vec!["blue", "yellow"]));
     /// ```
     pub fn learn(&mut self, sentence: &'a str) {
         let words = sentence.split_whitespace().collect::<Vec<&str>>();
@@ -85,6 +85,23 @@ impl<'a> MarkovChain<'a> {
             let (a, b, c) = (window[0], window[1], window[2]);
             self.map.entry((a, b)).or_insert_with(Vec::new).push(c);
         }
+    }
+
+    /// Get the possible words following the given bigram, or `None`
+    /// if the state is invalid.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lipsum::MarkovChain;
+    ///
+    /// let mut chain = MarkovChain::new();
+    /// chain.learn("red green blue");
+    /// assert_eq!(chain.words(("red", "green")), Some(&vec!["blue"]));
+    /// assert_eq!(chain.words(("foo", "bar")), None);
+    /// ```
+    pub fn words(&self, state: Bigram<'a>) -> Option<&Vec<&str>> {
+        self.map.get(&state)
     }
 
     /// Generate `n` words worth of lorem ipsum text. The text will
