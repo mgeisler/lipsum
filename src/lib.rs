@@ -274,6 +274,14 @@ thread_local! {
 /// from [`LOREM_IPSUM`]. The text will become random if sufficiently
 /// long output is requested.
 ///
+/// # Examples
+///
+/// ```
+/// use lipsum::lipsum;
+///
+/// assert_eq!(lipsum(7), "Lorem ipsum dolor sit amet, consectetur adipiscing");
+/// ```
+///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 pub fn lipsum(n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|cell| {
