@@ -57,8 +57,17 @@ pub struct MarkovChain<'a, R: Rng> {
 }
 
 impl<'a> MarkovChain<'a, rand::ThreadRng> {
-    /// Create a new Markov chain. It will use a default thread-local
-    /// random number generator.
+    /// Create a new empty Markov chain. It will use a default
+    /// thread-local random number generator.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lipsum::MarkovChain;
+    ///
+    /// let chain = MarkovChain::new();
+    /// assert!(chain.is_empty());
+    /// ```
     pub fn new() -> MarkovChain<'a, rand::ThreadRng> {
         MarkovChain::new_with_rng(rand::thread_rng())
     }
