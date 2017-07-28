@@ -15,7 +15,7 @@ application.
 Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-lipsum = "0.2"
+lipsum = "0.3"
 ```
 
 and this to your crate root:
