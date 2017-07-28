@@ -1,10 +1,13 @@
 [package]
 name = "lipsum"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Martin Geisler <martin@geisler.net>"]
 description = """
 Lipsum is a lorem ipsum text generation library. Use this if you need
 some filler text for your application.
+
+The text is generated using a simple Markov chain, which you can also
+instantiate to generate your own pieces of pseudo-random text.
 """
 documentation = "https://docs.rs/lipsum/"
 repository = "https://github.com/mgeisler/lipsum/"
