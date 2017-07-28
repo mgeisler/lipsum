@@ -57,16 +57,47 @@ pub struct MarkovChain<'a, R: Rng> {
 }
 
 impl<'a> MarkovChain<'a, rand::ThreadRng> {
-    /// Create a new Markov chain. It will use a default thread-local
-    /// random number generator.
+    /// Create a new empty Markov chain. It will use a default
+    /// thread-local random number generator.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lipsum::MarkovChain;
+    ///
+    /// let chain = MarkovChain::new();
+    /// assert!(chain.is_empty());
+    /// ```
     pub fn new() -> MarkovChain<'a, rand::ThreadRng> {
         MarkovChain::new_with_rng(rand::thread_rng())
     }
 }
 
 impl<'a, R: Rng> MarkovChain<'a, R> {
-    /// Create a new Markov chain that uses the given random number
-    /// generator.
+    /// Create a new empty Markov chain that uses the given random
+    /// number generator.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// extern crate rand;
+    /// # extern crate lipsum;
+    ///
+    /// # fn main() {
+    /// use rand::XorShiftRng;
+    /// use lipsum::MarkovChain;
+    ///
+    /// let rng = XorShiftRng::new_unseeded();
+    /// let mut chain = MarkovChain::new_with_rng(rng);
+    /// chain.learn("infra-red red orange yellow green blue indigo x-ray");
+    ///
+    /// // The chain jumps consistently like this:
+    /// assert_eq!(chain.generate(1), "yellow");
+    /// assert_eq!(chain.generate(1), "green");
+    /// assert_eq!(chain.generate(1), "red");
+    /// # }
+    /// ```
+
     pub fn new_with_rng(rng: R) -> MarkovChain<'a, R> {
         MarkovChain {
             map: HashMap::new(),
@@ -99,6 +130,41 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
         // Sync the keys with the current map.
         self.keys = self.map.keys().cloned().collect();
         self.keys.sort();
+    }
+
+    /// Returs the number of states in the Markov chain.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lipsum::MarkovChain;
+    ///
+    /// let mut chain = MarkovChain::new();
+    /// assert_eq!(chain.len(), 0);
+    ///
+    /// chain.learn("red orange yellow green blue indigo");
+    /// assert_eq!(chain.len(), 4);
+    /// ```
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.map.len()
+    }
+
+    /// Returns `true` if the Markov chain has no states.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lipsum::MarkovChain;
+    ///
+    /// let mut chain = MarkovChain::new();
+    /// assert!(chain.is_empty());
+    ///
+    /// chain.learn("foo bar baz");
+    /// assert!(!chain.is_empty());
+    /// ```
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     /// Get the possible words following the given bigram, or `None`
@@ -159,7 +225,7 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at a random point in the chain.
     pub fn iter(&mut self) -> Words {
-        let state = if self.keys.is_empty() {
+        let state = if self.is_empty() {
             ("", "")
         } else {
             *choose(&mut self.rng, &self.keys).unwrap()
@@ -273,6 +339,14 @@ thread_local! {
 /// "Lorem ipsum" and continues with the standard lorem ipsum text
 /// from [`LOREM_IPSUM`]. The text will become random if sufficiently
 /// long output is requested.
+///
+/// # Examples
+///
+/// ```
+/// use lipsum::lipsum;
+///
+/// assert_eq!(lipsum(7), "Lorem ipsum dolor sit amet, consectetur adipiscing");
+/// ```
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 pub fn lipsum(n: usize) -> String {
