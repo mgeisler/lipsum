@@ -74,8 +74,30 @@ impl<'a> MarkovChain<'a, rand::ThreadRng> {
 }
 
 impl<'a, R: Rng> MarkovChain<'a, R> {
-    /// Create a new Markov chain that uses the given random number
-    /// generator.
+    /// Create a new empty Markov chain that uses the given random
+    /// number generator.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// extern crate rand;
+    /// # extern crate lipsum;
+    ///
+    /// # fn main() {
+    /// use rand::XorShiftRng;
+    /// use lipsum::MarkovChain;
+    ///
+    /// let rng = XorShiftRng::new_unseeded();
+    /// let mut chain = MarkovChain::new_with_rng(rng);
+    /// chain.learn("infra-red red orange yellow green blue indigo x-ray");
+    ///
+    /// // The chain jumps consistently like this:
+    /// assert_eq!(chain.generate(1), "yellow");
+    /// assert_eq!(chain.generate(1), "green");
+    /// assert_eq!(chain.generate(1), "red");
+    /// # }
+    /// ```
+
     pub fn new_with_rng(rng: R) -> MarkovChain<'a, R> {
         MarkovChain {
             map: HashMap::new(),
