@@ -8,6 +8,14 @@ rust:
 
 cache: cargo
 
+before_install:
+  - |
+      if [[ "$TRAVIS_RUST_VERSION" == "1.6.0" ]]; then
+          echo "Old Rust detected, removing version-sync dependency"
+          sed -i "/^version-sync =/d" Cargo.toml
+          rm "tests/version-numbers.rs"
+      fi
+
 matrix:
   allow_failures:
     - rust: nightly
