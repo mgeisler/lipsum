@@ -15,6 +15,7 @@ readme = "README.md"
 keywords = ["lorem-ipsum", "lorem", "ipsum", "text", "typography"]
 categories = ["text-processing"]
 license = "MIT"
+exclude = [".dir-locals.el"]
 
 [badges]
 travis-ci = { repository = "mgeisler/lipsum" }
