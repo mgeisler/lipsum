@@ -23,3 +23,6 @@ appveyor = { repository = "mgeisler/lipsum" }
 
 [dependencies]
 rand = "0.3"
+
+[dev-dependencies]
+version-sync = "0.2"
