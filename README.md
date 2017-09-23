@@ -64,6 +64,8 @@ the same text.
 
 ## Release History
 
+This is a changelog with the most important changes in each release.
+
 ### Version 0.3.0 — July 28th, 2017
 
 Performance is improved by about 50% when generating text, but
