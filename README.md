@@ -66,6 +66,12 @@ the same text.
 
 This is a changelog with the most important changes in each release.
 
+### Unreleased
+
+Sentences returned from `generate` and `generate_from` now always end
+with `.` or some other punctuation character. Use `iter` directly if
+you want to control this.
+
 ### Version 0.3.0 — July 28th, 2017
 
 Performance is improved by about 50% when generating text, but
