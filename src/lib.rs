@@ -250,6 +250,12 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     }
 }
 
+/// Never-ending iterator over words in the Markov chain.
+///
+/// Generated with the [`iter`] or [`iter_from`] methods.
+///
+/// [`iter`]: struct.MarkovChain.html#method.iter
+/// [`iter_from`]: struct.MarkovChain.html#method.iter_from
 pub struct Words<'a> {
     map: &'a HashMap<Bigram<'a>, Vec<&'a str>>,
     rng: &'a mut rand::Rng,
