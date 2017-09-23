@@ -5,10 +5,19 @@
 [![](https://travis-ci.org/mgeisler/lipsum.svg)][travis-ci]
 [![](https://ci.appveyor.com/api/projects/status/ku3xlumht6r68f0l?svg=true)][appveyor]
 
-This is small Rust library for generating traditional
-mangled-Latin [lorem ipsum filler text][lorem ipsum] for your
-application.
+Lipsum is a small Rust library for generating pseudo-Latin [lorem
+ipsum filler text][lorem ipsum]. This is a standard placeholder text
+used in publishing. It starts with:
 
+> Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+> eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
+> ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+> aliquip ex ea commodo consequat…
+
+The text is generated using a [Markov chain] that has been trained on
+the first book in Cicero's work *De finibus bonorum et malorum* (*On
+the ends of good and evil*), of which the lorem ipsum text is a
+scrambled subset.
 
 ## Usage
 
@@ -43,14 +52,19 @@ fn main() {
 }
 ```
 
-The text will start with "Lorem ipsum dolor sit amet, …" and will
-become random after 18 words. The text is generated using a Markov
-chain which is trained on the full text of Cicero's work *De finibus
-bonorum et malorum* ("On the ends of good and evil"). The classic
-lorem ipsum text is derived from part of that book.
+This generates the lorem ipsum text show above:
+
+> Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+> eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
+> ad minim veniam, quis nostrud exercitation ullamco…
+
+The text becomes random after 18 words, so you might not see exactly
+the same text.
 
 
 ## Release History
+
+This is a changelog with the most important changes in each release.
 
 ### Version 0.3.0 — July 28th, 2017
 
@@ -91,6 +105,7 @@ Contributions will be accepted under the same license.
 [crates-io]: https://crates.io/crates/lipsum
 [api-docs]: https://docs.rs/lipsum/
 [lorem ipsum]: https://en.wikipedia.org/wiki/Lorem_ipsum
+[Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
 [travis-ci]: https://travis-ci.org/mgeisler/lipsum
 [appveyor]: https://ci.appveyor.com/project/mgeisler/lipsum
 [mit]: LICENSE
