@@ -92,9 +92,9 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// chain.learn("infra-red red orange yellow green blue indigo x-ray");
     ///
     /// // The chain jumps consistently like this:
-    /// assert_eq!(chain.generate(1), "yellow.");
-    /// assert_eq!(chain.generate(1), "green.");
-    /// assert_eq!(chain.generate(1), "red.");
+    /// assert_eq!(chain.generate(1), "Yellow.");
+    /// assert_eq!(chain.generate(1), "Green.");
+    /// assert_eq!(chain.generate(1), "Red.");
     /// # }
     /// ```
 
@@ -313,14 +313,26 @@ fn is_ascii_punctuation(c: char) -> bool {
     }
 }
 
-/// Join words from an iterator. The generated sentence will end with
-/// `'.'` if it doesn't already end with some other ASCII punctuation
-/// character.
+/// Join words from an iterator. The first word is always capitalized
+/// and the generated sentence will end with `'.'` if it doesn't
+/// already end with some other ASCII punctuation character.
 fn join_words<'a, I: Iterator<Item = &'a str>>(mut words: I) -> String {
     match words.next() {
         None => String::new(),
         Some(word) => {
             let mut sentence = String::from(word);
+
+            // Capitalize first word if necessary.
+            if !sentence.starts_with(|c: char| c.is_uppercase()) {
+                let mut chars = word.chars();
+                if let Some(first) = chars.next() {
+                    sentence.clear();
+                    sentence.extend(first.to_uppercase());
+                    sentence.extend(chars);
+                }
+            }
+
+            // Add remaining words.
             for word in words {
                 sentence.push(' ');
                 sentence.push_str(word);
@@ -428,7 +440,7 @@ mod tests {
         let mut chain = MarkovChain::new();
         chain.learn("red orange yellow green blue indigo violet");
         assert_eq!(chain.generate_from(5, ("orange", "yellow")),
-                   "orange yellow green blue indigo.");
+                   "Orange yellow green blue indigo.");
     }
 
     #[test]
@@ -475,6 +487,6 @@ mod tests {
         chain.learn("foo bar x y z");
         chain.learn("foo bar a b c");
 
-        assert_eq!(chain.generate(15), "a b b x y b x y x y x y bar x y.");
+        assert_eq!(chain.generate(15), "A b b x y b x y x y x y bar x y.");
     }
 }

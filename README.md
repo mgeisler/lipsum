@@ -68,9 +68,10 @@ This is a changelog with the most important changes in each release.
 
 ### Unreleased
 
-Sentences returned from `generate` and `generate_from` now always end
-with `.` or some other punctuation character. Use `iter` directly if
-you want to control this.
+The `generate` and `generate_from` now always generate proper
+sentences, meaning that they generate sentences that start with a
+capital letter and end with `.` or some other punctuation character.
+Use `iter` and `iter_from` directly if you need more control.
 
 ### Version 0.3.0 — July 28th, 2017
 
