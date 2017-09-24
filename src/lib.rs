@@ -31,6 +31,7 @@
 //! [`learn`]: struct.MarkovChain.html#method.learn
 //! [Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
 
+#![doc(html_root_url = "https://docs.rs/lipsum/0.3.0")]
 #![deny(missing_docs)]
 
 extern crate rand;
