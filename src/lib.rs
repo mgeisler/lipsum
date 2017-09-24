@@ -92,9 +92,9 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// chain.learn("infra-red red orange yellow green blue indigo x-ray");
     ///
     /// // The chain jumps consistently like this:
-    /// assert_eq!(chain.generate(1), "yellow");
-    /// assert_eq!(chain.generate(1), "green");
-    /// assert_eq!(chain.generate(1), "red");
+    /// assert_eq!(chain.generate(1), "Yellow.");
+    /// assert_eq!(chain.generate(1), "Green.");
+    /// assert_eq!(chain.generate(1), "Red.");
     /// # }
     /// ```
 
@@ -184,11 +184,13 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
         self.map.get(&state)
     }
 
-    /// Generate `n` words worth of lorem ipsum text. The text will
-    /// start from a random point in the Markov chain.
+    /// Generate a sentence with `n` words of lorem ipsum text. The
+    /// sentence will start from a random point in the Markov chain
+    /// and a `.` will be added as necessary to form a full sentence.
     ///
     /// See [`generate_from`] if you want to control the starting
-    /// point for the generated text.
+    /// point for the generated text and see [`iter`] if you simply
+    /// want a sequence of words.
     ///
     /// # Examples
     ///
@@ -205,19 +207,24 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// The output looks like this:
     ///
     /// > Ding! Tick, Tock, Tick, Tock, Ding! Ding! Tock, Ding! Tick,
-    /// > Tock, Tick, Tock, Tick, Tock
+    /// > Tock, Tick, Tock, Tick, Tock.
     ///
     /// [`generate_from`]: struct.MarkovChain.html#method.generate_from
+    /// [`iter`]: struct.MarkovChain.html#method.iter
     pub fn generate(&mut self, n: usize) -> String {
         join_words(self.iter().take(n))
     }
 
-    /// Generate `n` words worth of lorem ipsum text. The text will
-    /// start from the given bigram.
+    /// Generate a sentence with `n` words of lorem ipsum text. The
+    /// sentence will start from the given bigram and a `.` will be
+    /// added as necessary to form a full sentence.
     ///
-    /// Use [`generate`] if the starting point is not important.
+    /// Use [`generate`] if the starting point is not important. See
+    /// [`iter_from`] if you want a sequence of words that you can
+    /// format yourself.
     ///
     /// [`generate`]: struct.MarkovChain.html#method.generate
+    /// [`iter_from`]: struct.MarkovChain.html#method.iter_from
     pub fn generate_from(&mut self, n: usize, from: Bigram<'a>) -> String {
         join_words(self.iter_from(from).take(n))
     }
@@ -296,15 +303,55 @@ fn choose<'a, T>(rng: &mut Rng, values: &'a [T]) -> Option<&'a T> {
     }
 }
 
+/// Check if `c` is an ASCII punctuation character.
+fn is_ascii_punctuation(c: char) -> bool {
+    // We use the table from the unstable
+    // AsciiExt::is_ascii_punctuation function:
+    //
+    // U+0021 ... U+002F `! " # $ % & ' ( ) * + , - . /`
+    // U+003A ... U+0040 `: ; < = > ? @`
+    // U+005B ... U+0060 `[ \\ ] ^ _ \``
+    // U+007B ... U+007E `{ | } ~`
+    match c {
+        '\x21'...'\x2F' | '\x3A'...'\x40' | '\x5B'...'\x60' | '\x7B'...'\x7E' => true,
+        _ => false,
+    }
+}
+
+/// Join words from an iterator. The first word is always capitalized
+/// and the generated sentence will end with `'.'` if it doesn't
+/// already end with some other ASCII punctuation character.
 fn join_words<'a, I: Iterator<Item = &'a str>>(mut words: I) -> String {
     match words.next() {
         None => String::new(),
         Some(word) => {
             let mut sentence = String::from(word);
+
+            // Capitalize first word if necessary.
+            if !sentence.starts_with(|c: char| c.is_uppercase()) {
+                let mut chars = word.chars();
+                if let Some(first) = chars.next() {
+                    sentence.clear();
+                    sentence.extend(first.to_uppercase());
+                    sentence.extend(chars);
+                }
+            }
+
+            // Add remaining words.
             for word in words {
                 sentence.push(' ');
                 sentence.push_str(word);
             }
+
+            // Ensure the sentence ends with either one of ".!?".
+            if !sentence.ends_with(|c: char| c == '.' || c == '!' || c == '?') {
+                // Trim all trailing punctuation characters to avoid
+                // adding '.' after a ',' or similar.
+                let idx = sentence.trim_right_matches(is_ascii_punctuation).len();
+                sentence.truncate(idx);
+                sentence.push('.');
+            }
+
             sentence
         }
     }
@@ -351,7 +398,7 @@ thread_local! {
 /// ```
 /// use lipsum::lipsum;
 ///
-/// assert_eq!(lipsum(7), "Lorem ipsum dolor sit amet, consectetur adipiscing");
+/// assert_eq!(lipsum(7), "Lorem ipsum dolor sit amet, consectetur adipiscing.");
 /// ```
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
@@ -398,7 +445,7 @@ mod tests {
         let mut chain = MarkovChain::new();
         chain.learn("red orange yellow green blue indigo violet");
         assert_eq!(chain.generate_from(5, ("orange", "yellow")),
-                   "orange yellow green blue indigo");
+                   "Orange yellow green blue indigo.");
     }
 
     #[test]
@@ -445,6 +492,6 @@ mod tests {
         chain.learn("foo bar x y z");
         chain.learn("foo bar a b c");
 
-        assert_eq!(chain.generate(15), "a b b x y b x y x y x y bar x y");
+        assert_eq!(chain.generate(15), "A b b x y b x y x y x y bar x y.");
     }
 }
