@@ -24,7 +24,7 @@ scrambled subset.
 Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-lipsum = "0.3"
+lipsum = "0.4"
 ```
 
 and this to your crate root:
@@ -66,7 +66,7 @@ the same text.
 
 This is a changelog with the most important changes in each release.
 
-### Unreleased
+### Version 0.4.0 — September 24th, 2017
 
 The `generate` and `generate_from` now always generate proper
 sentences, meaning that they generate sentences that start with a
