@@ -189,7 +189,8 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// and a `.` will be added as necessary to form a full sentence.
     ///
     /// See [`generate_from`] if you want to control the starting
-    /// point for the generated text.
+    /// point for the generated text and see [`iter`] if you simply
+    /// want a sequence of words.
     ///
     /// # Examples
     ///
@@ -209,6 +210,7 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// > Tock, Tick, Tock, Tick, Tock.
     ///
     /// [`generate_from`]: struct.MarkovChain.html#method.generate_from
+    /// [`iter`]: struct.MarkovChain.html#method.iter
     pub fn generate(&mut self, n: usize) -> String {
         join_words(self.iter().take(n))
     }
@@ -217,9 +219,12 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// sentence will start from the given bigram and a `.` will be
     /// added as necessary to form a full sentence.
     ///
-    /// Use [`generate`] if the starting point is not important.
+    /// Use [`generate`] if the starting point is not important. See
+    /// [`iter_from`] if you want a sequence of words that you can
+    /// format yourself.
     ///
     /// [`generate`]: struct.MarkovChain.html#method.generate
+    /// [`iter_from`]: struct.MarkovChain.html#method.iter_from
     pub fn generate_from(&mut self, n: usize, from: Bigram<'a>) -> String {
         join_words(self.iter_from(from).take(n))
     }
