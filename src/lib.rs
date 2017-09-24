@@ -76,6 +76,14 @@ impl<'a> MarkovChain<'a, rand::ThreadRng> {
     }
 }
 
+impl<'a> Default for MarkovChain<'a, rand::ThreadRng> {
+    /// Create a new empty Markov chain. It will use a default
+    /// thread-local random number generator.
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a, R: Rng> MarkovChain<'a, R> {
     /// Create a new empty Markov chain that uses the given random
     /// number generator.
