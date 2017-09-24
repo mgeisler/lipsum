@@ -31,6 +31,8 @@
 //! [`learn`]: struct.MarkovChain.html#method.learn
 //! [Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
 
+#![deny(missing_docs)]
+
 extern crate rand;
 
 use std::cell::RefCell;
