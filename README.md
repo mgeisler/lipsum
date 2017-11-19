@@ -66,6 +66,10 @@ the same text.
 
 This is a changelog with the most important changes in each release.
 
+### Unreleased
+
+The oldest supported version of Rust is now 1.8.
+
 ### Version 0.4.0 — September 24th, 2017
 
 The `generate` and `generate_from` now always generate proper
