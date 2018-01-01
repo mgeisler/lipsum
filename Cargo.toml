@@ -22,7 +22,7 @@ travis-ci = { repository = "mgeisler/lipsum" }
 appveyor = { repository = "mgeisler/lipsum" }
 
 [dependencies]
-rand = "0.3"
+rand = "0.4"
 
 [dev-dependencies]
 version-sync = "0.5"
