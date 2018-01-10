@@ -1,0 +1,28 @@
+
+pipeline:
+  restore-cache:
+    image: drillster/drone-volume-cache
+    restore: true
+    mount:
+      - /drone/cargo
+    volumes:
+      - /tmp/cache:/cache
+
+  build:
+    image: rust
+    environment:
+      - CARGO_HOME=/drone/cargo
+    commands:
+      - cargo version
+      - cargo test
+      - echo sleeping
+      - sleep 1200
+      - echo done sleeping
+
+  rebuild-cache:
+    image: drillster/drone-volume-cache
+    rebuild: true
+    mount:
+      - /drone/cargo
+    volumes:
+      - /tmp/cache:/cache
