@@ -464,7 +464,7 @@ mod tests {
         // The bigram "yyy zzz" will not be present in the Markov
         // chain's map, and so we will not generate "xxx yyy zzz" as
         // one would expect. The chain moves from state "xxx yyy" to
-        // "yyy zzz", but sees that as invalid state and resets itsel
+        // "yyy zzz", but sees that as invalid state and resets itself
         // back to "xxx yyy".
         let mut chain = MarkovChain::new();
         chain.learn("xxx yyy zzz");
