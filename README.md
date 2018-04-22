@@ -3,7 +3,7 @@
 [![](https://img.shields.io/crates/v/lipsum.svg)][crates-io]
 [![](https://docs.rs/lipsum/badge.svg)][api-docs]
 [![](https://travis-ci.org/mgeisler/lipsum.svg?branch=master)][travis-ci]
-[![](https://ci.appveyor.com/api/projects/status/ku3xlumht6r68f0l?svg=true)][appveyor]
+[![](https://ci.appveyor.com/api/projects/status/github/mgeisler/lipsum?branch=master&svg=true)][appveyor]
 
 Lipsum is a small Rust library for generating pseudo-Latin [lorem
 ipsum filler text][lorem ipsum]. This is a standard placeholder text
