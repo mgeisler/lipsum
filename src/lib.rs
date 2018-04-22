@@ -423,6 +423,60 @@ pub fn lipsum(n: usize) -> String {
     })
 }
 
+/// Minimum number of words to include in a title.
+const TITLE_MIN_WORDS: usize = 3;
+/// Maximum number of words to include in a title.
+const TITLE_MAX_WORDS: usize = 8;
+/// Words shorter than this size are not capitalized.
+const TITLE_SMALL_WORD: usize = 3;
+
+/// Generate a short lorem ipsum string where the words are
+/// capitalized and stripped for punctuation characters.
+///
+/// # Examples
+///
+/// ```
+/// use lipsum::lipsum_title;
+///
+/// println!("{}", lipsum_title());
+/// ```
+///
+/// This will generate a string like
+///
+/// > Grate Meminit et Praesentibus
+///
+/// which should be suitable for use in a document title for section
+/// heading.
+pub fn lipsum_title() -> String {
+    LOREM_IPSUM_CHAIN.with(|cell| {
+        let n = rand::thread_rng().gen_range(TITLE_MIN_WORDS, TITLE_MAX_WORDS);
+        let mut chain = cell.borrow_mut();
+        // The average word length with our corpus is 7.6 bytes so
+        // this capacity will avoid most allocations.
+        let mut title = String::with_capacity(8 * n);
+
+        let words = chain
+            .iter()
+            .map(|word| word.trim_matches(is_ascii_punctuation))
+            .filter(|word| !word.is_empty())
+            .take(n);
+
+        for (i, word) in words.enumerate() {
+            if i > 0 {
+                title.push(' ');
+            }
+
+            // Capitalize the first word and all long words.
+            if i == 0 || word.len() > TITLE_SMALL_WORD {
+                title.push_str(&capitalize(word));
+            } else {
+                title.push_str(word);
+            }
+        }
+        title
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -445,6 +499,24 @@ mod tests {
     #[test]
     fn generate_two_words() {
         assert_eq!(lipsum(2).split_whitespace().count(), 2);
+    }
+
+    #[test]
+    fn generate_title() {
+        for word in lipsum_title().split_whitespace() {
+            assert!(
+                !word.starts_with(is_ascii_punctuation) && !word.ends_with(is_ascii_punctuation),
+                "Unexpected punctuation: {:?}",
+                word
+            );
+            if word.len() > TITLE_SMALL_WORD {
+                assert!(
+                    word.starts_with(char::is_uppercase),
+                    "Expected small word to be capitalized: {:?}",
+                    word
+                );
+            }
+        }
     }
 
     #[test]
