@@ -24,7 +24,7 @@ scrambled subset.
 Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-lipsum = "0.4"
+lipsum = "0.5"
 ```
 
 and this to your crate root:
@@ -75,7 +75,7 @@ all words.
 
 This is a changelog with the most important changes in each release.
 
-### Unreleased
+### Version 0.5.0 — April 22nd, 2018
 
 The new `lipsum_title` function can be used to generate a short string
 suitable for a document title or a section heading.
