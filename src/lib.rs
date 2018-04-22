@@ -36,9 +36,9 @@
 
 extern crate rand;
 
+use rand::Rng;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use rand::Rng;
 
 /// A bigram is simply two consecutive words.
 pub type Bigram<'a> = (&'a str, &'a str);
@@ -415,11 +415,10 @@ thread_local! {
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 pub fn lipsum(n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|cell| {
-                               let mut chain = cell.borrow_mut();
-                               chain.generate_from(n, ("Lorem", "ipsum"))
-                           })
+        let mut chain = cell.borrow_mut();
+        chain.generate_from(n, ("Lorem", "ipsum"))
+    })
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -455,8 +454,10 @@ mod tests {
     fn generate_from() {
         let mut chain = MarkovChain::new();
         chain.learn("red orange yellow green blue indigo violet");
-        assert_eq!(chain.generate_from(5, ("orange", "yellow")),
-                   "Orange yellow green blue indigo.");
+        assert_eq!(
+            chain.generate_from(5, ("orange", "yellow")),
+            "Orange yellow green blue indigo."
+        );
     }
 
     #[test]
