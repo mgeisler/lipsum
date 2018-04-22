@@ -468,9 +468,7 @@ mod tests {
         // back to "xxx yyy".
         let mut chain = MarkovChain::new();
         chain.learn("xxx yyy zzz");
-        // We use assert! instead of assert_ne! to support early
-        // versions of Rust.
-        assert!(chain.generate_from(3, ("xxx", "yyy")) != "xxx yyy zzz");
+        assert_ne!(chain.generate_from(3, ("xxx", "yyy")), "xxx yyy zzz");
     }
 
     #[test]
