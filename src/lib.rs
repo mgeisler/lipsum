@@ -329,6 +329,19 @@ fn is_ascii_punctuation(c: char) -> bool {
     }
 }
 
+/// Capitalize the first character in a string.
+fn capitalize<'a>(word: &'a str) -> String {
+    let idx = match word.chars().next() {
+        Some(c) => c.len_utf8(),
+        None => 0,
+    };
+
+    let mut result = String::with_capacity(word.len());
+    result.push_str(&word[..idx].to_uppercase());
+    result.push_str(&word[idx..]);
+    result
+}
+
 /// Join words from an iterator. The first word is always capitalized
 /// and the generated sentence will end with `'.'` if it doesn't
 /// already end with some other ASCII punctuation character.
@@ -336,17 +349,7 @@ fn join_words<'a, I: Iterator<Item = &'a str>>(mut words: I) -> String {
     match words.next() {
         None => String::new(),
         Some(word) => {
-            let mut sentence = String::from(word);
-
-            // Capitalize first word if necessary.
-            if !sentence.starts_with(|c: char| c.is_uppercase()) {
-                let mut chars = word.chars();
-                if let Some(first) = chars.next() {
-                    sentence.clear();
-                    sentence.extend(first.to_uppercase());
-                    sentence.extend(chars);
-                }
-            }
+            let mut sentence = capitalize(word);
 
             // Add remaining words.
             for word in words {
