@@ -329,6 +329,19 @@ fn is_ascii_punctuation(c: char) -> bool {
     }
 }
 
+/// Capitalize the first character in a string.
+fn capitalize<'a>(word: &'a str) -> String {
+    let idx = match word.chars().next() {
+        Some(c) => c.len_utf8(),
+        None => 0,
+    };
+
+    let mut result = String::with_capacity(word.len());
+    result.push_str(&word[..idx].to_uppercase());
+    result.push_str(&word[idx..]);
+    result
+}
+
 /// Join words from an iterator. The first word is always capitalized
 /// and the generated sentence will end with `'.'` if it doesn't
 /// already end with some other ASCII punctuation character.
@@ -336,17 +349,7 @@ fn join_words<'a, I: Iterator<Item = &'a str>>(mut words: I) -> String {
     match words.next() {
         None => String::new(),
         Some(word) => {
-            let mut sentence = String::from(word);
-
-            // Capitalize first word if necessary.
-            if !sentence.starts_with(|c: char| c.is_uppercase()) {
-                let mut chars = word.chars();
-                if let Some(first) = chars.next() {
-                    sentence.clear();
-                    sentence.extend(first.to_uppercase());
-                    sentence.extend(chars);
-                }
-            }
+            let mut sentence = capitalize(word);
 
             // Add remaining words.
             for word in words {
@@ -420,6 +423,60 @@ pub fn lipsum(n: usize) -> String {
     })
 }
 
+/// Minimum number of words to include in a title.
+const TITLE_MIN_WORDS: usize = 3;
+/// Maximum number of words to include in a title.
+const TITLE_MAX_WORDS: usize = 8;
+/// Words shorter than this size are not capitalized.
+const TITLE_SMALL_WORD: usize = 3;
+
+/// Generate a short lorem ipsum string where the words are
+/// capitalized and stripped for punctuation characters.
+///
+/// # Examples
+///
+/// ```
+/// use lipsum::lipsum_title;
+///
+/// println!("{}", lipsum_title());
+/// ```
+///
+/// This will generate a string like
+///
+/// > Grate Meminit et Praesentibus
+///
+/// which should be suitable for use in a document title for section
+/// heading.
+pub fn lipsum_title() -> String {
+    LOREM_IPSUM_CHAIN.with(|cell| {
+        let n = rand::thread_rng().gen_range(TITLE_MIN_WORDS, TITLE_MAX_WORDS);
+        let mut chain = cell.borrow_mut();
+        // The average word length with our corpus is 7.6 bytes so
+        // this capacity will avoid most allocations.
+        let mut title = String::with_capacity(8 * n);
+
+        let words = chain
+            .iter()
+            .map(|word| word.trim_matches(is_ascii_punctuation))
+            .filter(|word| !word.is_empty())
+            .take(n);
+
+        for (i, word) in words.enumerate() {
+            if i > 0 {
+                title.push(' ');
+            }
+
+            // Capitalize the first word and all long words.
+            if i == 0 || word.len() > TITLE_SMALL_WORD {
+                title.push_str(&capitalize(word));
+            } else {
+                title.push_str(word);
+            }
+        }
+        title
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -442,6 +499,24 @@ mod tests {
     #[test]
     fn generate_two_words() {
         assert_eq!(lipsum(2).split_whitespace().count(), 2);
+    }
+
+    #[test]
+    fn generate_title() {
+        for word in lipsum_title().split_whitespace() {
+            assert!(
+                !word.starts_with(is_ascii_punctuation) && !word.ends_with(is_ascii_punctuation),
+                "Unexpected punctuation: {:?}",
+                word
+            );
+            if word.len() > TITLE_SMALL_WORD {
+                assert!(
+                    word.starts_with(char::is_uppercase),
+                    "Expected small word to be capitalized: {:?}",
+                    word
+                );
+            }
+        }
     }
 
     #[test]
