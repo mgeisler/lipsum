@@ -4,6 +4,7 @@
 [![](https://docs.rs/lipsum/badge.svg)][api-docs]
 [![](https://travis-ci.org/mgeisler/lipsum.svg?branch=master)][travis-ci]
 [![](https://ci.appveyor.com/api/projects/status/github/mgeisler/lipsum?branch=master&svg=true)][appveyor]
+[![](https://codecov.io/gh/mgeisler/lipsum/branch/master/graph/badge.svg)][codecov]
 
 Lipsum is a small Rust library for generating pseudo-Latin [lorem
 ipsum filler text][lorem ipsum]. This is a standard placeholder text
@@ -128,6 +129,7 @@ Contributions will be accepted under the same license.
 
 [crates-io]: https://crates.io/crates/lipsum
 [api-docs]: https://docs.rs/lipsum/
+[codecov]: https://codecov.io/gh/mgeisler/lipsum
 [lorem ipsum]: https://en.wikipedia.org/wiki/Lorem_ipsum
 [Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
 [travis-ci]: https://travis-ci.org/mgeisler/lipsum
