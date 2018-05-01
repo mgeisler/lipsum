@@ -20,6 +20,7 @@ exclude = [".dir-locals.el"]
 [badges]
 travis-ci = { repository = "mgeisler/lipsum" }
 appveyor = { repository = "mgeisler/lipsum" }
+codecov = { repository = "mgeisler/lipsum" }
 
 [dependencies]
 rand = "0.4"
