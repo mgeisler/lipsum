@@ -76,6 +76,11 @@ all words.
 
 This is a changelog with the most important changes in each release.
 
+### Unreleased
+
+Dependencies were updated and the oldest supported version of Rust is
+now 1.21.
+
 ### Version 0.5.0 — April 22nd, 2018
 
 The new `lipsum_title` function can be used to generate a short string
