@@ -35,7 +35,11 @@
 #![deny(missing_docs)]
 
 extern crate rand;
+#[cfg(test)]
+extern crate rand_xorshift;
 
+use rand::rngs::ThreadRng;
+use rand::seq::SliceRandom;
 use rand::Rng;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -59,7 +63,7 @@ pub struct MarkovChain<'a, R: Rng> {
     rng: R,
 }
 
-impl<'a> MarkovChain<'a, rand::ThreadRng> {
+impl<'a> MarkovChain<'a, ThreadRng> {
     /// Create a new empty Markov chain. It will use a default
     /// thread-local random number generator.
     ///
@@ -71,12 +75,12 @@ impl<'a> MarkovChain<'a, rand::ThreadRng> {
     /// let chain = MarkovChain::new();
     /// assert!(chain.is_empty());
     /// ```
-    pub fn new() -> MarkovChain<'a, rand::ThreadRng> {
+    pub fn new() -> MarkovChain<'a, ThreadRng> {
         MarkovChain::new_with_rng(rand::thread_rng())
     }
 }
 
-impl<'a> Default for MarkovChain<'a, rand::ThreadRng> {
+impl<'a> Default for MarkovChain<'a, ThreadRng> {
     /// Create a new empty Markov chain. It will use a default
     /// thread-local random number generator.
     fn default() -> Self {
@@ -92,20 +96,22 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     ///
     /// ```
     /// extern crate rand;
+    /// extern crate rand_xorshift;
     /// # extern crate lipsum;
     ///
     /// # fn main() {
-    /// use rand::XorShiftRng;
+    /// use rand::SeedableRng;
+    /// use rand_xorshift::XorShiftRng;
     /// use lipsum::MarkovChain;
     ///
-    /// let rng = XorShiftRng::new_unseeded();
+    /// let rng = XorShiftRng::seed_from_u64(0);
     /// let mut chain = MarkovChain::new_with_rng(rng);
     /// chain.learn("infra-red red orange yellow green blue indigo x-ray");
     ///
     /// // The chain jumps consistently like this:
     /// assert_eq!(chain.generate(1), "Yellow.");
+    /// assert_eq!(chain.generate(1), "Blue.");
     /// assert_eq!(chain.generate(1), "Green.");
-    /// assert_eq!(chain.generate(1), "Red.");
     /// # }
     /// ```
 
@@ -242,11 +248,11 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
 
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at a random point in the chain.
-    pub fn iter(&mut self) -> Words {
+    pub fn iter(&mut self) -> Words<R> {
         let state = if self.is_empty() {
             ("", "")
         } else {
-            *choose(&mut self.rng, &self.keys).unwrap()
+            *self.keys.choose(&mut self.rng).unwrap()
         };
         Words {
             map: &self.map,
@@ -258,7 +264,7 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
 
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at the given bigram.
-    pub fn iter_from(&mut self, from: Bigram<'a>) -> Words {
+    pub fn iter_from(&mut self, from: Bigram<'a>) -> Words<R> {
         Words {
             map: &self.map,
             rng: &mut self.rng,
@@ -274,14 +280,14 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
 ///
 /// [`iter`]: struct.MarkovChain.html#method.iter
 /// [`iter_from`]: struct.MarkovChain.html#method.iter_from
-pub struct Words<'a> {
+pub struct Words<'a, R: 'a + Rng> {
     map: &'a HashMap<Bigram<'a>, Vec<&'a str>>,
-    rng: &'a mut rand::Rng,
+    rng: &'a mut R,
     keys: &'a Vec<Bigram<'a>>,
     state: Bigram<'a>,
 }
 
-impl<'a> Iterator for Words<'a> {
+impl<'a, R: Rng> Iterator for Words<'a, R> {
     type Item = &'a str;
 
     fn next(&mut self) -> Option<&'a str> {
@@ -292,25 +298,12 @@ impl<'a> Iterator for Words<'a> {
         let result = Some(self.state.0);
 
         while !self.map.contains_key(&self.state) {
-            self.state = *choose(self.rng, self.keys).unwrap();
+            self.state = *self.keys.choose(self.rng).unwrap();
         }
         let next_words = &self.map[&self.state];
-        let next = choose(self.rng, next_words).unwrap();
+        let next = next_words.choose(self.rng).unwrap();
         self.state = (self.state.1, next);
         result
-    }
-}
-
-/// Choose a random element from a slice.
-///
-/// Unlike `Rng::choose`, this function does not require the RNG to be
-/// Sized and thus works on any random number generator.
-fn choose<'a, T>(rng: &mut Rng, values: &'a [T]) -> Option<&'a T> {
-    if values.is_empty() {
-        None
-    } else {
-        let idx = (values.len() as f32 * rng.next_f32()) as usize;
-        Some(&values[idx])
     }
 }
 
@@ -392,7 +385,7 @@ pub const LIBER_PRIMUS: &'static str = include_str!("liber-primus.txt");
 
 thread_local! {
     // Markov chain generating lorem ipsum text.
-    static LOREM_IPSUM_CHAIN: RefCell<MarkovChain<'static, rand::ThreadRng>> = {
+    static LOREM_IPSUM_CHAIN: RefCell<MarkovChain<'static, ThreadRng>> = {
         let mut chain = MarkovChain::new();
         // The cost of learning increases as more and more text is
         // added, so we start with the smallest text.
@@ -480,6 +473,8 @@ pub fn lipsum_title() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::rand_xorshift::XorShiftRng;
+    use super::rand::SeedableRng;
 
     #[test]
     fn starts_with_lorem_ipsum() {
@@ -569,14 +564,11 @@ mod tests {
 
     #[test]
     fn new_with_rng() {
-        extern crate rand;
-        use rand::SeedableRng;
-
-        let rng = rand::XorShiftRng::from_seed([1, 2, 3, 4]);
+        let rng = XorShiftRng::seed_from_u64(1234);
         let mut chain = MarkovChain::new_with_rng(rng);
         chain.learn("foo bar x y z");
         chain.learn("foo bar a b c");
 
-        assert_eq!(chain.generate(15), "A b b x y b x y x y x y bar x y.");
+        assert_eq!(chain.generate(15), "A b x y y b y bar a b y x y bar a.");
     }
 }
