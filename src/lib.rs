@@ -472,9 +472,9 @@ pub fn lipsum_title() -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use super::rand_xorshift::XorShiftRng;
     use super::rand::SeedableRng;
+    use super::rand_xorshift::XorShiftRng;
+    use super::*;
 
     #[test]
     fn starts_with_lorem_ipsum() {
