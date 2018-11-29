@@ -79,7 +79,7 @@ This is a changelog with the most important changes in each release.
 ### Unreleased
 
 Dependencies were updated and the oldest supported version of Rust is
-now 1.21.
+now 1.22.
 
 ### Version 0.5.0 — April 22nd, 2018
 
