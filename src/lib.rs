@@ -416,6 +416,29 @@ pub fn lipsum(n: usize) -> String {
     })
 }
 
+/// Generate `n` words of random lorem ipsum text.
+///
+/// The text starts with a random word from [`LOREM_IPSUM`]. Multiple
+/// sentences may be generated, depending on the punctuation of the
+/// words being random selected.
+///
+/// # Examples
+///
+/// ```
+/// use lipsum::lipsum_words;
+///
+/// println!("{}", lipsum_words(6));
+/// // -> "Propter soliditatem, censet in infinito inani."
+/// ```
+///
+/// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
+pub fn lipsum_words(n: usize) -> String {
+    LOREM_IPSUM_CHAIN.with(|cell| {
+        let mut chain = cell.borrow_mut();
+        chain.generate(n)
+    })
+}
+
 /// Minimum number of words to include in a title.
 const TITLE_MIN_WORDS: usize = 3;
 /// Maximum number of words to include in a title.
@@ -494,6 +517,14 @@ mod tests {
     #[test]
     fn generate_two_words() {
         assert_eq!(lipsum(2).split_whitespace().count(), 2);
+    }
+
+    #[test]
+    fn starts_differently() {
+        // Check that calls to lipsum_words don't always start with
+        // "Lorem ipsum".
+        let idx = "Lorem ipsum".len();
+        assert_ne!(&lipsum_words(5)[..idx], &lipsum_words(5)[..idx]);
     }
 
     #[test]

@@ -78,6 +78,9 @@ This is a changelog with the most important changes in each release.
 
 ### Unreleased
 
+The new `lipsum_words` function can be used to generate random lorem
+ipsum text that doesn't always start with "Lorem ipsum".
+
 Dependencies were updated and the oldest supported version of Rust is
 now 1.22.
 
