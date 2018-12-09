@@ -395,10 +395,12 @@ thread_local! {
     }
 }
 
-/// Generate `n` words of lorem ipsum text. The output starts with
-/// "Lorem ipsum" and continues with the standard lorem ipsum text
-/// from [`LOREM_IPSUM`]. The text will become random if sufficiently
-/// long output is requested.
+/// Generate `n` words of lorem ipsum text. The output will always
+/// start with "Lorem ipsum".
+///
+/// The text continues with the standard lorem ipsum text from
+/// [`LOREM_IPSUM`] and becomes random if more than 18 words is
+/// requested. See [`lipsum_words`] if fully random text is needed.
 ///
 /// # Examples
 ///
@@ -409,6 +411,7 @@ thread_local! {
 /// ```
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
+/// [`lipsum_words`]: fn.lipsum_words.html
 pub fn lipsum(n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|cell| {
         let mut chain = cell.borrow_mut();
@@ -446,8 +449,9 @@ const TITLE_MAX_WORDS: usize = 8;
 /// Words shorter than this size are not capitalized.
 const TITLE_SMALL_WORD: usize = 3;
 
-/// Generate a short lorem ipsum string where the words are
-/// capitalized and stripped for punctuation characters.
+/// Generate a short lorem ipsum text with words in title case.
+///
+/// The words are capitalized and stripped for punctuation characters.
 ///
 /// # Examples
 ///
