@@ -395,10 +395,12 @@ thread_local! {
     }
 }
 
-/// Generate `n` words of lorem ipsum text. The output starts with
-/// "Lorem ipsum" and continues with the standard lorem ipsum text
-/// from [`LOREM_IPSUM`]. The text will become random if sufficiently
-/// long output is requested.
+/// Generate `n` words of lorem ipsum text. The output will always
+/// start with "Lorem ipsum".
+///
+/// The text continues with the standard lorem ipsum text from
+/// [`LOREM_IPSUM`] and becomes random if more than 18 words is
+/// requested. See [`lipsum_words`] if fully random text is needed.
 ///
 /// # Examples
 ///
@@ -409,10 +411,34 @@ thread_local! {
 /// ```
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
+/// [`lipsum_words`]: fn.lipsum_words.html
 pub fn lipsum(n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|cell| {
         let mut chain = cell.borrow_mut();
         chain.generate_from(n, ("Lorem", "ipsum"))
+    })
+}
+
+/// Generate `n` words of random lorem ipsum text.
+///
+/// The text starts with a random word from [`LOREM_IPSUM`]. Multiple
+/// sentences may be generated, depending on the punctuation of the
+/// words being random selected.
+///
+/// # Examples
+///
+/// ```
+/// use lipsum::lipsum_words;
+///
+/// println!("{}", lipsum_words(6));
+/// // -> "Propter soliditatem, censet in infinito inani."
+/// ```
+///
+/// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
+pub fn lipsum_words(n: usize) -> String {
+    LOREM_IPSUM_CHAIN.with(|cell| {
+        let mut chain = cell.borrow_mut();
+        chain.generate(n)
     })
 }
 
@@ -423,8 +449,9 @@ const TITLE_MAX_WORDS: usize = 8;
 /// Words shorter than this size are not capitalized.
 const TITLE_SMALL_WORD: usize = 3;
 
-/// Generate a short lorem ipsum string where the words are
-/// capitalized and stripped for punctuation characters.
+/// Generate a short lorem ipsum text with words in title case.
+///
+/// The words are capitalized and stripped for punctuation characters.
 ///
 /// # Examples
 ///
@@ -494,6 +521,14 @@ mod tests {
     #[test]
     fn generate_two_words() {
         assert_eq!(lipsum(2).split_whitespace().count(), 2);
+    }
+
+    #[test]
+    fn starts_differently() {
+        // Check that calls to lipsum_words don't always start with
+        // "Lorem ipsum".
+        let idx = "Lorem ipsum".len();
+        assert_ne!(&lipsum_words(5)[..idx], &lipsum_words(5)[..idx]);
     }
 
     #[test]
