@@ -25,7 +25,7 @@ scrambled subset.
 Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-lipsum = "0.5"
+lipsum = "0.6"
 ```
 
 and this to your crate root:
@@ -76,7 +76,7 @@ all words.
 
 This is a changelog with the most important changes in each release.
 
-### Unreleased
+### Version 0.6.0 — December 9th, 2018
 
 The new `lipsum_words` function can be used to generate random lorem
 ipsum text that doesn't always start with "Lorem ipsum".
