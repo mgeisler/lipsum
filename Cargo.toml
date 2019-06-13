@@ -27,4 +27,4 @@ rand = "0.6"
 
 [dev-dependencies]
 version-sync = "0.6"
-rand_xorshift = "0.1"
+rand_xorshift = "0.2"
