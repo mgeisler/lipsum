@@ -354,7 +354,7 @@ fn join_words<'a, I: Iterator<Item = &'a str>>(mut words: I) -> String {
             if !sentence.ends_with(|c: char| c == '.' || c == '!' || c == '?') {
                 // Trim all trailing punctuation characters to avoid
                 // adding '.' after a ',' or similar.
-                let idx = sentence.trim_right_matches(is_ascii_punctuation).len();
+                let idx = sentence.trim_end_matches(is_ascii_punctuation).len();
                 sentence.truncate(idx);
                 sentence.push('.');
             }
