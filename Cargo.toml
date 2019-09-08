@@ -26,5 +26,5 @@ codecov = { repository = "mgeisler/lipsum" }
 rand = "0.6"
 
 [dev-dependencies]
-version-sync = "0.6"
+version-sync = "0.8"
 rand_xorshift = "0.1"
