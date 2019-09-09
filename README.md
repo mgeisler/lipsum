@@ -2,6 +2,7 @@
 
 [![](https://img.shields.io/crates/v/lipsum.svg)][crates-io]
 [![](https://docs.rs/lipsum/badge.svg)][api-docs]
+[![](https://img.shields.io/badge/rustc-1.31.0-blue.svg)][rust-2018]
 [![](https://travis-ci.org/mgeisler/lipsum.svg?branch=master)][travis-ci]
 [![](https://ci.appveyor.com/api/projects/status/github/mgeisler/lipsum?branch=master&svg=true)][appveyor]
 [![](https://codecov.io/gh/mgeisler/lipsum/branch/master/graph/badge.svg)][codecov]
@@ -76,6 +77,11 @@ all words.
 
 This is a changelog with the most important changes in each release.
 
+### Unreleased
+
+We now use [Rust 2018][rust-2018], which means we require Rust version
+1.31.0 or later.
+
 ### Version 0.6.0 — December 9th, 2018
 
 The new `lipsum_words` function can be used to generate random lorem
@@ -142,4 +148,5 @@ Contributions will be accepted under the same license.
 [Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
 [travis-ci]: https://travis-ci.org/mgeisler/lipsum
 [appveyor]: https://ci.appveyor.com/project/mgeisler/lipsum
+[rust-2018]: https://doc.rust-lang.org/edition-guide/rust-2018/
 [mit]: LICENSE
