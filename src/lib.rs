@@ -239,7 +239,7 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
 
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at a random point in the chain.
-    pub fn iter(&mut self) -> Words<R> {
+    pub fn iter(&mut self) -> Words<'_, R> {
         let state = if self.is_empty() {
             ("", "")
         } else {
@@ -255,7 +255,7 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
 
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at the given bigram.
-    pub fn iter_from(&mut self, from: Bigram<'a>) -> Words<R> {
+    pub fn iter_from(&mut self, from: Bigram<'a>) -> Words<'_, R> {
         Words {
             map: &self.map,
             rng: &mut self.rng,
@@ -271,7 +271,7 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
 ///
 /// [`iter`]: struct.MarkovChain.html#method.iter
 /// [`iter_from`]: struct.MarkovChain.html#method.iter_from
-pub struct Words<'a, R: 'a + Rng> {
+pub struct Words<'a, R: Rng> {
     map: &'a HashMap<Bigram<'a>, Vec<&'a str>>,
     rng: &'a mut R,
     keys: &'a Vec<Bigram<'a>>,
