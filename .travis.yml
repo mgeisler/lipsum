@@ -11,8 +11,3 @@ script:
   - cargo test
 
 cache: cargo
-
-matrix:
-  allow_failures:
-    - rust: nightly
-
