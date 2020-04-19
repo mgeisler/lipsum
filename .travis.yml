@@ -9,5 +9,3 @@ install:
 
 script:
   - cargo test
-
-cache: cargo
