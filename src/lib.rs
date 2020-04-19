@@ -111,10 +111,9 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// // The chain jumps consistently like this:
     /// assert_eq!(chain.generate(1), "Yellow.");
     /// assert_eq!(chain.generate(1), "Blue.");
-    /// assert_eq!(chain.generate(1), "Green.");
+    /// assert_eq!(chain.generate(1), "Orange.");
     /// # }
     /// ```
-
     pub fn new_with_rng(rng: R) -> MarkovChain<'a, R> {
         MarkovChain {
             map: HashMap::new(),
@@ -604,6 +603,6 @@ mod tests {
         chain.learn("foo bar x y z");
         chain.learn("foo bar a b c");
 
-        assert_eq!(chain.generate(15), "A b x y y b y bar a b y x y bar a.");
+        assert_eq!(chain.generate(15), "Bar x y a b x y y b b a b a b bar.");
     }
 }

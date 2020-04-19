@@ -23,8 +23,8 @@ appveyor = { repository = "mgeisler/lipsum" }
 codecov = { repository = "mgeisler/lipsum" }
 
 [dependencies]
-rand = "0.6"
+rand = "0.7"
 
 [dev-dependencies]
-version-sync = "0.8"
-rand_xorshift = "0.1"
+version-sync = "0.9"
+rand_xorshift = "0.2"
