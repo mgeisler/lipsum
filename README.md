@@ -29,12 +29,6 @@ Add this to your `Cargo.toml`:
 lipsum = "0.6"
 ```
 
-and this to your crate root:
-```rust
-extern crate lipsum;
-```
-
-
 ## Documentation
 
 Please see the **[API documentation][api-docs]**.
@@ -44,8 +38,6 @@ Please see the **[API documentation][api-docs]**.
 
 Use the `lipsum` function to generate lorem ipsum text:
 ```rust
-extern crate lipsum;
-
 use lipsum::lipsum;
 
 fn main() {

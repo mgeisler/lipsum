@@ -1,5 +1,3 @@
-extern crate lipsum;
-
 use std::env;
 
 fn main() {

@@ -34,10 +34,6 @@
 #![doc(html_root_url = "https://docs.rs/lipsum/0.6.0")]
 #![deny(missing_docs)]
 
-extern crate rand;
-#[cfg(test)]
-extern crate rand_xorshift;
-
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -95,10 +91,6 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// # Examples
     ///
     /// ```
-    /// extern crate rand;
-    /// extern crate rand_xorshift;
-    /// # extern crate lipsum;
-    ///
     /// # fn main() {
     /// use rand::SeedableRng;
     /// use rand_xorshift::XorShiftRng;
@@ -498,9 +490,9 @@ pub fn lipsum_title() -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::rand::SeedableRng;
-    use super::rand_xorshift::XorShiftRng;
     use super::*;
+    use rand::SeedableRng;
+    use rand_xorshift::XorShiftRng;
 
     #[test]
     fn starts_with_lorem_ipsum() {
