@@ -1,8 +1,6 @@
 #![feature(test)]
 
-extern crate lipsum;
 extern crate test;
-
 use test::Bencher;
 
 #[bench]

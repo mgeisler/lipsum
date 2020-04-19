@@ -34,10 +34,6 @@
 #![doc(html_root_url = "https://docs.rs/lipsum/0.6.0")]
 #![deny(missing_docs)]
 
-extern crate rand;
-#[cfg(test)]
-extern crate rand_xorshift;
-
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -95,10 +91,6 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// # Examples
     ///
     /// ```
-    /// extern crate rand;
-    /// extern crate rand_xorshift;
-    /// # extern crate lipsum;
-    ///
     /// # fn main() {
     /// use rand::SeedableRng;
     /// use rand_xorshift::XorShiftRng;
@@ -111,10 +103,9 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// // The chain jumps consistently like this:
     /// assert_eq!(chain.generate(1), "Yellow.");
     /// assert_eq!(chain.generate(1), "Blue.");
-    /// assert_eq!(chain.generate(1), "Green.");
+    /// assert_eq!(chain.generate(1), "Orange.");
     /// # }
     /// ```
-
     pub fn new_with_rng(rng: R) -> MarkovChain<'a, R> {
         MarkovChain {
             map: HashMap::new(),
@@ -248,7 +239,7 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
 
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at a random point in the chain.
-    pub fn iter(&mut self) -> Words<R> {
+    pub fn iter(&mut self) -> Words<'_, R> {
         let state = if self.is_empty() {
             ("", "")
         } else {
@@ -264,7 +255,7 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
 
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at the given bigram.
-    pub fn iter_from(&mut self, from: Bigram<'a>) -> Words<R> {
+    pub fn iter_from(&mut self, from: Bigram<'a>) -> Words<'_, R> {
         Words {
             map: &self.map,
             rng: &mut self.rng,
@@ -280,7 +271,7 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
 ///
 /// [`iter`]: struct.MarkovChain.html#method.iter
 /// [`iter_from`]: struct.MarkovChain.html#method.iter_from
-pub struct Words<'a, R: 'a + Rng> {
+pub struct Words<'a, R: Rng> {
     map: &'a HashMap<Bigram<'a>, Vec<&'a str>>,
     rng: &'a mut R,
     keys: &'a Vec<Bigram<'a>>,
@@ -499,9 +490,9 @@ pub fn lipsum_title() -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::rand::SeedableRng;
-    use super::rand_xorshift::XorShiftRng;
     use super::*;
+    use rand::SeedableRng;
+    use rand_xorshift::XorShiftRng;
 
     #[test]
     fn starts_with_lorem_ipsum() {
@@ -604,6 +595,6 @@ mod tests {
         chain.learn("foo bar x y z");
         chain.learn("foo bar a b c");
 
-        assert_eq!(chain.generate(15), "A b x y y b y bar a b y x y bar a.");
+        assert_eq!(chain.generate(15), "Bar x y a b x y y b b a b a b bar.");
     }
 }
