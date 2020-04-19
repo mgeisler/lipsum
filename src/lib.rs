@@ -300,17 +300,7 @@ impl<'a, R: Rng> Iterator for Words<'a, R> {
 
 /// Check if `c` is an ASCII punctuation character.
 fn is_ascii_punctuation(c: char) -> bool {
-    // We use the table from the unstable
-    // AsciiExt::is_ascii_punctuation function:
-    //
-    // U+0021 ... U+002F `! " # $ % & ' ( ) * + , - . /`
-    // U+003A ... U+0040 `: ; < = > ? @`
-    // U+005B ... U+0060 `[ \\ ] ^ _ \``
-    // U+007B ... U+007E `{ | } ~`
-    match c {
-        '\x21'...'\x2F' | '\x3A'...'\x40' | '\x5B'...'\x60' | '\x7B'...'\x7E' => true,
-        _ => false,
-    }
+    c.is_ascii_punctuation()
 }
 
 /// Capitalize the first character in a string.
