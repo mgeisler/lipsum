@@ -79,8 +79,15 @@ This is a changelog with the most important changes in each release.
 
 ### Unreleased
 
-We now use [Rust 2018][rust-2018], which means we require Rust version
-1.31.0 or later.
+We now require the [Rust 2018 edition][rust-2018]. Over the years,
+we’ve repeatedly seen build failures in our CI, even when nothing
+changed in `lipsum`. The failures happened because we tested against a
+fixed version of Rust, but our dependencies kept releasing new patch
+it has versions that would push up the minimum required Rust version.
+
+The build failures makes it infeasible to keep `lipsum` compatible
+with any particular version of Rust. We will therefore track the
+latest stable version of Rust from now on.
 
 ### Version 0.6.0 — December 9th, 2018
 
