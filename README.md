@@ -81,6 +81,10 @@ The build failures makes it infeasible to keep `lipsum` compatible
 with any particular version of Rust. We will therefore track the
 latest stable version of Rust from now on.
 
+The new `lipsum_words_from_seed` function generates random but
+deterministic lorem ipsum text. This is useful in unit tests when you
+need fixed inputs.
+
 ### Version 0.6.0 — December 9th, 2018
 
 The new `lipsum_words` function can be used to generate random lorem

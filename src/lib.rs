@@ -28,7 +28,8 @@
 
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
-use rand::Rng;
+use rand::{Rng, SeedableRng};
+use rand_chacha::ChaCha20Rng;
 use std::cell::RefCell;
 use std::collections::HashMap;
 
@@ -85,17 +86,17 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     /// ```
     /// # fn main() {
     /// use rand::SeedableRng;
-    /// use rand_xorshift::XorShiftRng;
+    /// use rand_chacha::ChaCha20Rng;
     /// use lipsum::MarkovChain;
     ///
-    /// let rng = XorShiftRng::seed_from_u64(0);
+    /// let rng = ChaCha20Rng::seed_from_u64(0);
     /// let mut chain = MarkovChain::new_with_rng(rng);
     /// chain.learn("infra-red red orange yellow green blue indigo x-ray");
     ///
     /// // The chain jumps consistently like this:
-    /// assert_eq!(chain.generate(1), "Yellow.");
-    /// assert_eq!(chain.generate(1), "Blue.");
     /// assert_eq!(chain.generate(1), "Orange.");
+    /// assert_eq!(chain.generate(1), "Infra-red.");
+    /// assert_eq!(chain.generate(1), "Yellow.");
     /// # }
     /// ```
     pub fn new_with_rng(rng: R) -> MarkovChain<'a, R> {
@@ -392,11 +393,11 @@ pub fn lipsum(n: usize) -> String {
     })
 }
 
-/// Generate `n` words of random lorem ipsum text.
+/// Generate `n` random words of lorem ipsum text.
 ///
 /// The text starts with a random word from [`LOREM_IPSUM`]. Multiple
 /// sentences may be generated, depending on the punctuation of the
-/// words being random selected.
+/// words being selected.
 ///
 /// # Examples
 ///
@@ -413,6 +414,29 @@ pub fn lipsum_words(n: usize) -> String {
         let mut chain = cell.borrow_mut();
         chain.generate(n)
     })
+}
+
+/// Generate `n` random words of lorem ipsum text. The seed is used to
+/// make the sequence deterministic. This is useful in unit tests
+/// where you need random but consistent inputs.
+///
+/// # Examples
+///
+/// ```
+/// use lipsum::lipsum_words_from_seed;
+///
+/// assert_eq!(lipsum_words_from_seed(7, 1234),
+///            "Anteponant iis, quae recordamur. stulti autem malorum.");
+/// ```
+///
+/// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
+/// [`lipsum_words`]: fn.lipsum_words.html
+pub fn lipsum_words_from_seed(n: usize, seed: u64) -> String {
+    let rng = ChaCha20Rng::seed_from_u64(seed);
+    let mut chain = MarkovChain::new_with_rng(rng);
+    chain.learn(LOREM_IPSUM);
+    chain.learn(LIBER_PRIMUS);
+    chain.generate(n)
 }
 
 /// Minimum number of words to include in a title.
@@ -474,7 +498,7 @@ pub fn lipsum_title() -> String {
 mod tests {
     use super::*;
     use rand::SeedableRng;
-    use rand_xorshift::XorShiftRng;
+    use rand_chacha::ChaCha20Rng;
 
     #[test]
     fn starts_with_lorem_ipsum() {
@@ -572,11 +596,11 @@ mod tests {
 
     #[test]
     fn new_with_rng() {
-        let rng = XorShiftRng::seed_from_u64(1234);
+        let rng = ChaCha20Rng::seed_from_u64(1234);
         let mut chain = MarkovChain::new_with_rng(rng);
         chain.learn("foo bar x y z");
         chain.learn("foo bar a b c");
 
-        assert_eq!(chain.generate(15), "Bar x y a b x y y b b a b a b bar.");
+        assert_eq!(chain.generate(15), "A b bar a b a b bar a b x y b y x.");
     }
 }
