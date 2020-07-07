@@ -26,7 +26,7 @@ scrambled subset.
 Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-lipsum = "0.6"
+lipsum = "0.7"
 ```
 
 ## Documentation

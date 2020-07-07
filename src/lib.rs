@@ -23,7 +23,7 @@
 //! [`learn`]: struct.MarkovChain.html#method.learn
 //! [Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
 
-#![doc(html_root_url = "https://docs.rs/lipsum/0.6.0")]
+#![doc(html_root_url = "https://docs.rs/lipsum/0.7.0")]
 #![deny(missing_docs)]
 
 use rand::rngs::ThreadRng;
