@@ -69,21 +69,19 @@ all words.
 
 This is a changelog with the most important changes in each release.
 
-### Unreleased
+### Version 0.7.0 — July 8th, 2020
 
-We now require the [Rust 2018 edition][rust-2018]. Over the years,
-we’ve repeatedly seen build failures in our CI, even when nothing
-changed in `lipsum`. The failures happened because we tested against a
-fixed version of Rust, but our dependencies kept releasing new patch
-it has versions that would push up the minimum required Rust version.
+* The code has been updated to the [Rust 2018 edition][rust-2018].
 
-The build failures makes it infeasible to keep `lipsum` compatible
-with any particular version of Rust. We will therefore track the
-latest stable version of Rust from now on.
+* Each new release will only support the latest stable version of
+  Rust. Trying to support older Rust versions has proven to be a
+  fool's errand: our dependencies keep releasing new patch versions
+  that require newer and newer versions of Rust.
 
-The new `lipsum_words_from_seed` function generates random but
-deterministic lorem ipsum text. This is useful in unit tests when you
-need fixed inputs.
+* [#65](https://github.com/mgeisler/lipsum/pull/65): A new
+  `lipsum_words_from_seed` function was added. It generates random but
+  deterministic lorem ipsum text. This is useful in unit tests when
+  you need fixed inputs.
 
 ### Version 0.6.0 — December 9th, 2018
 
