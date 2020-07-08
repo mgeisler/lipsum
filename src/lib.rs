@@ -603,4 +603,16 @@ mod tests {
 
         assert_eq!(chain.generate(15), "A b bar a b a b bar a b x y b y x.");
     }
+
+    #[test]
+    fn seed_works() {
+        assert_eq!(
+            lipsum_words_from_seed(10, 100_000),
+            lipsum_words_from_seed(10, 100_000)
+        );
+        assert_ne!(
+            lipsum_words_from_seed(10, 100_000),
+            lipsum_words_from_seed(10, 100_001)
+        );
+    }
 }
