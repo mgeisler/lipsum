@@ -103,7 +103,7 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
         MarkovChain {
             map: HashMap::new(),
             keys: Vec::new(),
-            rng: rng,
+            rng,
         }
     }
 
@@ -130,7 +130,7 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
         }
         // Sync the keys with the current map.
         self.keys = self.map.keys().cloned().collect();
-        self.keys.sort();
+        self.keys.sort_unstable();
     }
 
     /// Returs the number of states in the Markov chain.
@@ -242,7 +242,7 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
             map: &self.map,
             rng: &mut self.rng,
             keys: &self.keys,
-            state: state,
+            state,
         }
     }
 
@@ -297,7 +297,7 @@ fn is_ascii_punctuation(c: char) -> bool {
 }
 
 /// Capitalize the first character in a string.
-fn capitalize<'a>(word: &'a str) -> String {
+fn capitalize(word: &str) -> String {
     let idx = match word.chars().next() {
         Some(c) => c.len_utf8(),
         None => 0,
@@ -348,14 +348,14 @@ fn join_words<'a, I: Iterator<Item = &'a str>>(mut words: I) -> String {
 ///
 /// [Wikipedia]: https://en.wikipedia.org/wiki/Lorem_ipsum
 /// [`LIBER_PRIMUS`]: constant.LIBER_PRIMUS.html
-pub const LOREM_IPSUM: &'static str = include_str!("lorem-ipsum.txt");
+pub const LOREM_IPSUM: &str = include_str!("lorem-ipsum.txt");
 
 /// The first book in Cicero's work De finibus bonorum et malorum ("On
 /// the ends of good and evil"). The lorem ipsum text in
 /// [`LOREM_IPSUM`] is derived from part of this text.
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
-pub const LIBER_PRIMUS: &'static str = include_str!("liber-primus.txt");
+pub const LIBER_PRIMUS: &str = include_str!("liber-primus.txt");
 
 thread_local! {
     // Markov chain generating lorem ipsum text.
@@ -466,7 +466,7 @@ const TITLE_SMALL_WORD: usize = 3;
 /// heading.
 pub fn lipsum_title() -> String {
     LOREM_IPSUM_CHAIN.with(|cell| {
-        let n = rand::thread_rng().gen_range(TITLE_MIN_WORDS, TITLE_MAX_WORDS);
+        let n = rand::thread_rng().gen_range(TITLE_MIN_WORDS..TITLE_MAX_WORDS);
         let mut chain = cell.borrow_mut();
         // The average word length with our corpus is 7.6 bytes so
         // this capacity will avoid most allocations.
