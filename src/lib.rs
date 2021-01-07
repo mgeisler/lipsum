@@ -297,7 +297,7 @@ fn is_ascii_punctuation(c: char) -> bool {
 }
 
 /// Capitalize the first character in a string.
-fn capitalize(word: &str) -> String {
+fn capitalize<'a>(word: &'a str) -> String {
     let idx = match word.chars().next() {
         Some(c) => c.len_utf8(),
         None => 0,
