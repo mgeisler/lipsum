@@ -466,7 +466,7 @@ const TITLE_SMALL_WORD: usize = 3;
 /// heading.
 pub fn lipsum_title() -> String {
     LOREM_IPSUM_CHAIN.with(|cell| {
-        let n = rand::thread_rng().gen_range(TITLE_MIN_WORDS, TITLE_MAX_WORDS);
+        let n = rand::thread_rng().gen_range(TITLE_MIN_WORDS..TITLE_MAX_WORDS);
         let mut chain = cell.borrow_mut();
         // The average word length with our corpus is 7.6 bytes so
         // this capacity will avoid most allocations.
