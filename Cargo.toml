@@ -18,11 +18,6 @@ license = "MIT"
 edition = "2018"
 exclude = [".dir-locals.el"]
 
-[badges]
-travis-ci = { repository = "mgeisler/lipsum" }
-appveyor = { repository = "mgeisler/lipsum" }
-codecov = { repository = "mgeisler/lipsum" }
-
 [dependencies]
 rand = "0.8"
 rand_chacha = "0.3"
