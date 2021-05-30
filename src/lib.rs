@@ -23,15 +23,15 @@
 //! [`learn`]: struct.MarkovChain.html#method.learn
 //! [Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
 
-#![doc(html_root_url = "https://docs.rs/lipsum/0.7.0")]
+#![doc(html_root_url = "https://docs.rs/lipsum/0.8.0")]
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
+use rand::thread_rng;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
-use std::cell::RefCell;
 use std::collections::HashMap;
 
 /// A bigram is simply two consecutive words.
@@ -47,65 +47,36 @@ pub type Bigram<'a> = (&'a str, &'a str);
 ///
 /// [Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
 /// [blog post]: https://blakewilliams.me/posts/generating-arbitrary-text-with-markov-chains-in-rust
-pub struct MarkovChain<'a, R: Rng> {
+#[derive(Debug, Clone, Default)]
+pub struct MarkovChain<'a> {
     map: HashMap<Bigram<'a>, Vec<&'a str>>,
     keys: Vec<Bigram<'a>>,
-    rng: R,
 }
 
-impl<'a> MarkovChain<'a, ThreadRng> {
-    /// Create a new empty Markov chain. It will use a default
-    /// thread-local random number generator.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use lipsum::MarkovChain;
-    ///
-    /// let chain = MarkovChain::new();
-    /// assert!(chain.is_empty());
-    /// ```
-    pub fn new() -> MarkovChain<'a, ThreadRng> {
-        MarkovChain::new_with_rng(rand::thread_rng())
-    }
-}
-
-impl<'a> Default for MarkovChain<'a, ThreadRng> {
-    /// Create a new empty Markov chain. It will use a default
-    /// thread-local random number generator.
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<'a, R: Rng> MarkovChain<'a, R> {
-    /// Create a new empty Markov chain that uses the given random
-    /// number generator.
+impl<'a> MarkovChain<'a> {
+    /// Create a new empty Markov chain.
     ///
     /// # Examples
     ///
     /// ```
     /// # fn main() {
+    /// use lipsum::MarkovChain;
     /// use rand::SeedableRng;
     /// use rand_chacha::ChaCha20Rng;
-    /// use lipsum::MarkovChain;
     ///
-    /// let rng = ChaCha20Rng::seed_from_u64(0);
-    /// let mut chain = MarkovChain::new_with_rng(rng);
+    /// let mut chain = MarkovChain::new();
     /// chain.learn("infra-red red orange yellow green blue indigo x-ray");
     ///
+    /// let mut rng = ChaCha20Rng::seed_from_u64(0);
+    ///
     /// // The chain jumps consistently like this:
-    /// assert_eq!(chain.generate(1), "Orange.");
-    /// assert_eq!(chain.generate(1), "Infra-red.");
-    /// assert_eq!(chain.generate(1), "Yellow.");
+    /// assert_eq!(chain.generate_with_rng(&mut rng, 1), "Orange.");
+    /// assert_eq!(chain.generate_with_rng(&mut rng, 1), "Infra-red.");
+    /// assert_eq!(chain.generate_with_rng(&mut rng, 1), "Yellow.");
     /// # }
     /// ```
-    pub fn new_with_rng(rng: R) -> MarkovChain<'a, R> {
-        MarkovChain {
-            map: HashMap::new(),
-            keys: Vec::new(),
-            rng: rng,
-        }
+    pub fn new() -> MarkovChain<'a> {
+        Default::default()
     }
 
     /// Add new text to the Markov chain. This can be called several
@@ -188,7 +159,41 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
 
     /// Generate a sentence with `n` words of lorem ipsum text. The
     /// sentence will start from a random point in the Markov chain
+    /// generated using the specified random number generator,
     /// and a `.` will be added as necessary to form a full sentence.
+    ///
+    /// See [`generate_with_rng_from`] if you want to control the
+    /// starting point for the generated text and see [`iter_with_rng`]
+    /// if you simply want a sequence of words.
+    ///
+    /// # Examples
+    ///
+    /// Generating the sounds of a grandfather clock:
+    ///
+    /// ```
+    /// use lipsum::MarkovChain;
+    /// use rand::thread_rng;
+    ///
+    /// let mut chain = MarkovChain::new();
+    /// chain.learn("Tick, Tock, Tick, Tock, Ding! Tick, Tock, Ding! Ding!");
+    /// println!("{}", chain.generate_with_rng(thread_rng(), 15));
+    /// ```
+    ///
+    /// The output looks like this:
+    ///
+    /// > Ding! Tick, Tock, Tick, Tock, Ding! Ding! Tock, Ding! Tick,
+    /// > Tock, Tick, Tock, Tick, Tock.
+    ///
+    /// [`generate_with_rng_from`]: struct.MarkovChain.html#method.generate_with_rng_from
+    /// [`iter_with_rng`]: struct.MarkovChain.html#method.iter_with_rng
+    pub fn generate_with_rng<R: Rng>(&self, rng: R, n: usize) -> String {
+        join_words(self.iter_with_rng(rng).take(n))
+    }
+
+    /// Generate a sentence with `n` words of lorem ipsum text. The
+    /// sentence will start from a random point in the Markov chain
+    /// generated using the default random number generator and a `.`
+    /// will be added as necessary to form a full sentence.
     ///
     /// See [`generate_from`] if you want to control the starting
     /// point for the generated text and see [`iter`] if you simply
@@ -213,8 +218,22 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     ///
     /// [`generate_from`]: struct.MarkovChain.html#method.generate_from
     /// [`iter`]: struct.MarkovChain.html#method.iter
-    pub fn generate(&mut self, n: usize) -> String {
-        join_words(self.iter().take(n))
+    pub fn generate(&self, n: usize) -> String {
+        self.generate_with_rng(thread_rng(), n)
+    }
+
+    /// Generate a sentence with `n` words of lorem ipsum text. The
+    /// sentence will start from the given bigram and a `.` will be
+    /// added as necessary to form a full sentence.
+    ///
+    /// Use [`generate_with_rng`] if the starting point is not important. See
+    /// [`iter_with_rng_from`] if you want a sequence of words that you can
+    /// format yourself.
+    ///
+    /// [`generate_with_rng`]: struct.MarkovChain.html#method.generate_with_rng
+    /// [`iter_with_rng_from`]: struct.MarkovChain.html#method.iter_with_rng_from
+    pub fn generate_with_rng_from<R: Rng>(&self, rng: R, n: usize, from: Bigram<'a>) -> String {
+        join_words(self.iter_with_rng_from(rng, from).take(n))
     }
 
     /// Generate a sentence with `n` words of lorem ipsum text. The
@@ -227,35 +246,42 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
     ///
     /// [`generate`]: struct.MarkovChain.html#method.generate
     /// [`iter_from`]: struct.MarkovChain.html#method.iter_from
-    pub fn generate_from(&mut self, n: usize, from: Bigram<'a>) -> String {
-        join_words(self.iter_from(from).take(n))
+    pub fn generate_from(&self, n: usize, from: Bigram<'a>) -> String {
+        self.generate_with_rng_from(thread_rng(), n, from)
     }
 
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at a random point in the chain.
-    pub fn iter(&mut self) -> Words<'_, R> {
-        let state = if self.is_empty() {
+    pub fn iter_with_rng<R: Rng>(&self, mut rng: R) -> Words<'_, R> {
+        let initial_bigram = if self.is_empty() {
             ("", "")
         } else {
-            *self.keys.choose(&mut self.rng).unwrap()
+            *self.keys.choose(&mut rng).unwrap()
         };
+        self.iter_with_rng_from(rng, initial_bigram)
+    }
+
+    /// Make a never-ending iterator over the words in the Markov
+    /// chain. The iterator starts at a random point in the chain.
+    pub fn iter(&self) -> Words<'_, ThreadRng> {
+        self.iter_with_rng(thread_rng())
+    }
+
+    /// Make a never-ending iterator over the words in the Markov
+    /// chain. The iterator starts at the given bigram.
+    pub fn iter_with_rng_from<R: Rng>(&self, rng: R, from: Bigram<'a>) -> Words<'_, R> {
         Words {
             map: &self.map,
-            rng: &mut self.rng,
+            rng,
             keys: &self.keys,
-            state: state,
+            state: from,
         }
     }
 
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at the given bigram.
-    pub fn iter_from(&mut self, from: Bigram<'a>) -> Words<'_, R> {
-        Words {
-            map: &self.map,
-            rng: &mut self.rng,
-            keys: &self.keys,
-            state: from,
-        }
+    pub fn iter_from(&self, from: Bigram<'a>) -> Words<'_, ThreadRng> {
+        self.iter_with_rng_from(thread_rng(), from)
     }
 }
 
@@ -267,7 +293,7 @@ impl<'a, R: Rng> MarkovChain<'a, R> {
 /// [`iter_from`]: struct.MarkovChain.html#method.iter_from
 pub struct Words<'a, R: Rng> {
     map: &'a HashMap<Bigram<'a>, Vec<&'a str>>,
-    rng: &'a mut R,
+    rng: R,
     keys: &'a Vec<Bigram<'a>>,
     state: Bigram<'a>,
 }
@@ -283,10 +309,10 @@ impl<'a, R: Rng> Iterator for Words<'a, R> {
         let result = Some(self.state.0);
 
         while !self.map.contains_key(&self.state) {
-            self.state = *self.keys.choose(self.rng).unwrap();
+            self.state = *self.keys.choose(&mut self.rng).unwrap();
         }
         let next_words = &self.map[&self.state];
-        let next = next_words.choose(self.rng).unwrap();
+        let next = next_words.choose(&mut self.rng).unwrap();
         self.state = (self.state.1, next);
         result
     }
@@ -360,13 +386,13 @@ pub const LIBER_PRIMUS: &'static str = include_str!("liber-primus.txt");
 
 thread_local! {
     // Markov chain generating lorem ipsum text.
-    static LOREM_IPSUM_CHAIN: RefCell<MarkovChain<'static, ThreadRng>> = {
+    static LOREM_IPSUM_CHAIN: MarkovChain<'static> = {
         let mut chain = MarkovChain::new();
         // The cost of learning increases as more and more text is
         // added, so we start with the smallest text.
         chain.learn(LOREM_IPSUM);
         chain.learn(LIBER_PRIMUS);
-        RefCell::new(chain)
+        chain
     }
 }
 
@@ -388,10 +414,7 @@ thread_local! {
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 /// [`lipsum_words`]: fn.lipsum_words.html
 pub fn lipsum(n: usize) -> String {
-    LOREM_IPSUM_CHAIN.with(|cell| {
-        let mut chain = cell.borrow_mut();
-        chain.generate_from(n, ("Lorem", "ipsum"))
-    })
+    LOREM_IPSUM_CHAIN.with(|chain| chain.generate_from(n, ("Lorem", "ipsum")))
 }
 
 /// Generate `n` random words of lorem ipsum text.
@@ -411,10 +434,7 @@ pub fn lipsum(n: usize) -> String {
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 pub fn lipsum_words(n: usize) -> String {
-    LOREM_IPSUM_CHAIN.with(|cell| {
-        let mut chain = cell.borrow_mut();
-        chain.generate(n)
-    })
+    LOREM_IPSUM_CHAIN.with(|chain| chain.generate(n))
 }
 
 /// Generate `n` random words of lorem ipsum text. The seed is used to
@@ -434,10 +454,7 @@ pub fn lipsum_words(n: usize) -> String {
 /// [`lipsum_words`]: fn.lipsum_words.html
 pub fn lipsum_words_from_seed(n: usize, seed: u64) -> String {
     let rng = ChaCha20Rng::seed_from_u64(seed);
-    let mut chain = MarkovChain::new_with_rng(rng);
-    chain.learn(LOREM_IPSUM);
-    chain.learn(LIBER_PRIMUS);
-    chain.generate(n)
+    LOREM_IPSUM_CHAIN.with(|chain| chain.generate_with_rng(rng, n))
 }
 
 /// Minimum number of words to include in a title.
@@ -466,9 +483,8 @@ const TITLE_SMALL_WORD: usize = 3;
 /// which should be suitable for use in a document title for section
 /// heading.
 pub fn lipsum_title() -> String {
-    LOREM_IPSUM_CHAIN.with(|cell| {
-        let n = rand::thread_rng().gen_range(TITLE_MIN_WORDS..TITLE_MAX_WORDS);
-        let mut chain = cell.borrow_mut();
+    LOREM_IPSUM_CHAIN.with(|chain| {
+        let n = thread_rng().gen_range(TITLE_MIN_WORDS..TITLE_MAX_WORDS);
         // The average word length with our corpus is 7.6 bytes so
         // this capacity will avoid most allocations.
         let mut title = String::with_capacity(8 * n);
@@ -549,7 +565,7 @@ mod tests {
 
     #[test]
     fn empty_chain() {
-        let mut chain = MarkovChain::new();
+        let chain = MarkovChain::new();
         assert_eq!(chain.generate(10), "");
     }
 
@@ -598,11 +614,14 @@ mod tests {
     #[test]
     fn new_with_rng() {
         let rng = ChaCha20Rng::seed_from_u64(1234);
-        let mut chain = MarkovChain::new_with_rng(rng);
+        let mut chain = MarkovChain::new();
         chain.learn("foo bar x y z");
         chain.learn("foo bar a b c");
 
-        assert_eq!(chain.generate(15), "A b bar a b a b bar a b x y b y x.");
+        assert_eq!(
+            chain.generate_with_rng(rng, 15),
+            "A b bar a b a b bar a b x y b y x."
+        );
     }
 
     #[test]
