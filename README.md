@@ -17,26 +17,27 @@ used in publishing. It starts with:
 > aliquip ex ea commodo consequat…
 
 The text is generated using a [Markov chain] that has been trained on
-the first book in Cicero's work *De finibus bonorum et malorum* (*On
-the ends of good and evil*), of which the lorem ipsum text is a
+the first book in Cicero's work _De finibus bonorum et malorum_ (_On
+the ends of good and evil_), of which the lorem ipsum text is a
 scrambled subset.
 
 ## Usage
 
 Add this to your `Cargo.toml`:
+
 ```toml
 [dependencies]
-lipsum = "0.7"
+lipsum = "0.8"
 ```
 
 ## Documentation
 
 Please see the **[API documentation][api-docs]**.
 
-
 ## Getting Started
 
 Use the `lipsum` function to generate lorem ipsum text:
+
 ```rust
 use lipsum::lipsum;
 
@@ -64,24 +65,29 @@ function looks like this:
 Small words are kept uncapitalized and punctuation is stripped from
 all words.
 
-
 ## Release History
 
 This is a changelog with the most important changes in each release.
 
+### Version 0.8.0 — May 30th, 2021
+
+The random number generator has been separated from the `MarkovChain`
+implementation to allow using the same trained model to generate
+multiple outputs with different seeds.
+
 ### Version 0.7.0 — July 8th, 2020
 
-* The code has been updated to the [Rust 2018 edition][rust-2018].
+-   The code has been updated to the [Rust 2018 edition][rust-2018].
 
-* Each new release will only support the latest stable version of
-  Rust. Trying to support older Rust versions has proven to be a
-  fool's errand: our dependencies keep releasing new patch versions
-  that require newer and newer versions of Rust.
+-   Each new release will only support the latest stable version of
+    Rust. Trying to support older Rust versions has proven to be a
+    fool's errand: our dependencies keep releasing new patch versions
+    that require newer and newer versions of Rust.
 
-* [#65](https://github.com/mgeisler/lipsum/pull/65): A new
-  `lipsum_words_from_seed` function was added. It generates random but
-  deterministic lorem ipsum text. This is useful in unit tests when
-  you need fixed inputs.
+-   [#65](https://github.com/mgeisler/lipsum/pull/65): A new
+    `lipsum_words_from_seed` function was added. It generates random but
+    deterministic lorem ipsum text. This is useful in unit tests when
+    you need fixed inputs.
 
 ### Version 0.6.0 — December 9th, 2018
 
@@ -113,19 +119,19 @@ training the Markov chain now takes about twice as long as before.
 
 The `MarkovChain` struct has many new methods:
 
-* `new_with_rng` makes it possible to specify the random number
-  generator used by the Markov chain. Use this to get deterministic
-  and thus reproducible output for tests. `MarkovChain` now owns the
-  RNG it uses and as a consequence, it has an extra type parameter.
-  This is a breaking change if you used struct directly in your code.
+-   `new_with_rng` makes it possible to specify the random number
+    generator used by the Markov chain. Use this to get deterministic
+    and thus reproducible output for tests. `MarkovChain` now owns the
+    RNG it uses and as a consequence, it has an extra type parameter.
+    This is a breaking change if you used struct directly in your code.
 
-* `iter` and `into_from` return iterators over words in the Markov
-  chain. The `generate` and `generate_from` methods are now
-  straight-forward convenience wrappers for the iterators.
+-   `iter` and `into_from` return iterators over words in the Markov
+    chain. The `generate` and `generate_from` methods are now
+    straight-forward convenience wrappers for the iterators.
 
-* `len` tells you the number of stats in the Markov chain and
-  `is_empty` tells you if the Markov chain is empty, meaning that it
-  hasn't been trained on anything yet.
+-   `len` tells you the number of stats in the Markov chain and
+    `is_empty` tells you if the Markov chain is empty, meaning that it
+    hasn't been trained on anything yet.
 
 ### Version 0.2.0 — July 10th, 2017
 
@@ -135,18 +141,16 @@ Rust version 1.6.0 is now supported. This is checked with TravisCI.
 
 First public release.
 
-
 ## License
 
 Lipsum can be distributed according to the [MIT license][mit].
 Contributions will be accepted under the same license.
 
-
 [crates-io]: https://crates.io/crates/lipsum
 [api-docs]: https://docs.rs/lipsum/
 [codecov]: https://codecov.io/gh/mgeisler/lipsum
 [lorem ipsum]: https://en.wikipedia.org/wiki/Lorem_ipsum
-[Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
+[markov chain]: https://en.wikipedia.org/wiki/Markov_chain
 [travis-ci]: https://travis-ci.org/mgeisler/lipsum
 [appveyor]: https://ci.appveyor.com/project/mgeisler/lipsum
 [rust-2018]: https://doc.rust-lang.org/edition-guide/rust-2018/
