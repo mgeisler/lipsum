@@ -417,6 +417,29 @@ pub fn lipsum(n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|chain| chain.generate_from(n, ("Lorem", "ipsum")))
 }
 
+/// Generate `n` words of lorem ipsum text. The output will always start with
+/// "Lorem ipsum". The seed makes the sequence deterministic.
+///
+/// Deterministic sequences are useful for unit tests where you need random but
+/// consistent inputs or when users expect an infinitely extendable blind text
+/// string that does not change.
+///
+/// # Examples
+///
+/// ```
+/// use lipsum::lipsum_from_seed;
+///
+/// assert_eq!(lipsum_from_seed(23, 16),
+///     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim.");
+/// ```
+///
+/// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
+/// [`lipsum`]: fn.lipsum.html
+pub fn lipsum_from_seed(n: usize, seed: u64) -> String {
+    let rng = ChaCha20Rng::seed_from_u64(seed);
+    LOREM_IPSUM_CHAIN.with(|chain| chain.generate_with_rng_from(rng, n, ("Lorem", "ipsum")))
+}
+
 /// Generate `n` random words of lorem ipsum text.
 ///
 /// The text starts with a random word from [`LOREM_IPSUM`]. Multiple
@@ -437,9 +460,12 @@ pub fn lipsum_words(n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|chain| chain.generate(n))
 }
 
-/// Generate `n` random words of lorem ipsum text. The seed is used to
-/// make the sequence deterministic. This is useful in unit tests
-/// where you need random but consistent inputs.
+/// Generate `n` random words of lorem ipsum text. The seed makes the sequence
+/// deterministic.
+///
+/// Deterministic sequences are useful for unit tests where you need random but
+/// consistent inputs or when users expect an infinitely extendable blind text
+/// string that does not change.
 ///
 /// # Examples
 ///
@@ -630,9 +656,11 @@ mod tests {
             lipsum_words_from_seed(10, 100_000),
             lipsum_words_from_seed(10, 100_000)
         );
+        assert_eq!(lipsum_from_seed(30, 100_000), lipsum_from_seed(30, 100_000));
         assert_ne!(
             lipsum_words_from_seed(10, 100_000),
             lipsum_words_from_seed(10, 100_001)
         );
+        assert_ne!(lipsum_from_seed(30, 100_000), lipsum_from_seed(30, 100_001));
     }
 }
