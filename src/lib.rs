@@ -343,16 +343,27 @@ fn join_words<'a, I: Iterator<Item = &'a str>>(mut words: I) -> String {
     match words.next() {
         None => String::new(),
         Some(word) => {
+            // Closure to determine whether a character ends a sentence.
+            let is_sentence_end = |c: char| c == '.' || c == '!' || c == '?';
+
             let mut sentence = capitalize(word);
+            let mut needs_cap = sentence.ends_with(is_sentence_end);
 
             // Add remaining words.
             for word in words {
                 sentence.push(' ');
-                sentence.push_str(word);
+
+                if needs_cap {
+                    sentence.push_str(&capitalize(word));
+                } else {
+                    sentence.push_str(word);
+                }
+
+                needs_cap = word.ends_with(is_sentence_end);
             }
 
             // Ensure the sentence ends with either one of ".!?".
-            if !sentence.ends_with(|c: char| c == '.' || c == '!' || c == '?') {
+            if !sentence.ends_with(is_sentence_end) {
                 // Trim all trailing punctuation characters to avoid
                 // adding '.' after a ',' or similar.
                 let idx = sentence.trim_end_matches(is_ascii_punctuation).len();
@@ -473,7 +484,7 @@ pub fn lipsum_words(n: usize) -> String {
 /// use lipsum::lipsum_words_from_seed;
 ///
 /// assert_eq!(lipsum_words_from_seed(7, 1234),
-///            "Anteponant iis, quae recordamur. stulti autem malorum.");
+///            "Anteponant iis, quae recordamur. Stulti autem malorum.");
 /// ```
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
@@ -587,6 +598,19 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn capitalize_after_punctiation() {
+        // The Markov Chain will yield a "habitut." as the second word. However,
+        // the following "voluptatem" is not capitalized, which does not make
+        // much sense, given that it appears after a full stop. The `join_words`
+        // must ensure that every word appearing after sentence-ending
+        // punctuation is capitalized.
+        assert_eq!(
+            lipsum_words_from_seed(9, 5),
+            "Nullam habuit. Voluptatem cum summum bonum in voluptate est."
+        );
     }
 
     #[test]
