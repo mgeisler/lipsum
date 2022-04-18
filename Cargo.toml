@@ -15,7 +15,7 @@ readme = "README.md"
 keywords = ["lorem-ipsum", "lorem", "ipsum", "text", "typography"]
 categories = ["text-processing"]
 license = "MIT"
-edition = "2018"
+edition = "2021"
 exclude = [".dir-locals.el"]
 
 [dependencies]
