@@ -343,11 +343,11 @@ fn join_words<'a, I: Iterator<Item = &'a str>>(mut words: I) -> String {
     match words.next() {
         None => String::new(),
         Some(word) => {
-            // Closure to determine whether a character ends a sentence.
-            let is_sentence_end = |c: char| c == '.' || c == '!' || c == '?';
+            // Punctuation characters which ends a sentence.
+            let punctuation = &['.', '!', '?'];
 
             let mut sentence = capitalize(word);
-            let mut needs_cap = sentence.ends_with(is_sentence_end);
+            let mut needs_cap = sentence.ends_with(punctuation);
 
             // Add remaining words.
             for word in words {
@@ -359,11 +359,11 @@ fn join_words<'a, I: Iterator<Item = &'a str>>(mut words: I) -> String {
                     sentence.push_str(word);
                 }
 
-                needs_cap = word.ends_with(is_sentence_end);
+                needs_cap = word.ends_with(punctuation);
             }
 
             // Ensure the sentence ends with either one of ".!?".
-            if !sentence.ends_with(is_sentence_end) {
+            if !sentence.ends_with(punctuation) {
                 // Trim all trailing punctuation characters to avoid
                 // adding '.' after a ',' or similar.
                 let idx = sentence.trim_end_matches(is_ascii_punctuation).len();
