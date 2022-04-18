@@ -4,7 +4,7 @@ version = "0.8.0"
 authors = ["Martin Geisler <martin@geisler.net>"]
 description = """
 Lipsum is a lorem ipsum text generation library. Use this if you need
-some filler text for your application.
+filler or dummy text for your application.
 
 The text is generated using a simple Markov chain, which you can also
 instantiate to generate your own pieces of pseudo-random text.
@@ -12,7 +12,8 @@ instantiate to generate your own pieces of pseudo-random text.
 documentation = "https://docs.rs/lipsum/"
 repository = "https://github.com/mgeisler/lipsum/"
 readme = "README.md"
-keywords = ["lorem-ipsum", "lorem", "ipsum", "text", "typography"]
+keywords = ["lorem-ipsum", "lorem", "ipsum", "random", "bigram", "markov-chain",
+            "text", "typography"]
 categories = ["text-processing"]
 license = "MIT"
 edition = "2018"
