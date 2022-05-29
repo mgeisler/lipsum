@@ -69,11 +69,18 @@ all words.
 
 This is a changelog with the most important changes in each release.
 
+### Version 0.8.1 (2022-04-19)
+
+* [#73](https://github.com/mgeisler/lipsum/pull/73): Add
+  `lipsum_from_seed` and tweak capitalization. Thanks @reknih!
+* [#77](https://github.com/mgeisler/lipsum/pull/77): Update to Rust
+  2021 edition.
+
 ### Version 0.8.0 — May 30th, 2021
 
 The random number generator has been separated from the `MarkovChain`
 implementation to allow using the same trained model to generate
-multiple outputs with different seeds.
+multiple outputs with different seeds. Thanks @Diggsey!
 
 ### Version 0.7.0 — July 8th, 2020
 

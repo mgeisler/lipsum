@@ -11,3 +11,5 @@ jobs:
     with:
       name: "Martin Geisler"
       email: "martin@geisler.net"
+      changelog-file: "README.md"
+      changelog-heading-level: "###"
