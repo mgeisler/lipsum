@@ -68,6 +68,11 @@ all words.
 
 This is a changelog with the most important changes in each release.
 
+### Version 0.8.2 (2022-06-06)
+
+* [#84](https://github.com/mgeisler/lipsum/pull/84): Fix build error
+  on Rust 1.56. Thanks @WorldSEnder for the report.
+
 ### Version 0.8.1 (2022-04-19)
 
 * [#73](https://github.com/mgeisler/lipsum/pull/73): Add
