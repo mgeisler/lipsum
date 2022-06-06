@@ -102,7 +102,7 @@ impl<'a> MarkovChain<'a> {
         }
         // Sync the keys with the current map.
         self.keys = self.map.keys().cloned().collect();
-        self.keys.sort();
+        self.keys.sort_unstable();
     }
 
     /// Returs the number of states in the Markov chain.
@@ -324,7 +324,7 @@ fn is_ascii_punctuation(c: char) -> bool {
 }
 
 /// Capitalize the first character in a string.
-fn capitalize<'a>(word: &'a str) -> String {
+fn capitalize(word: &str) -> String {
     let idx = match word.chars().next() {
         Some(c) => c.len_utf8(),
         None => 0,
@@ -386,14 +386,14 @@ fn join_words<'a, I: Iterator<Item = &'a str>>(mut words: I) -> String {
 ///
 /// [Wikipedia]: https://en.wikipedia.org/wiki/Lorem_ipsum
 /// [`LIBER_PRIMUS`]: constant.LIBER_PRIMUS.html
-pub const LOREM_IPSUM: &'static str = include_str!("lorem-ipsum.txt");
+pub const LOREM_IPSUM: &str = include_str!("lorem-ipsum.txt");
 
 /// The first book in Cicero's work De finibus bonorum et malorum ("On
 /// the ends of good and evil"). The lorem ipsum text in
 /// [`LOREM_IPSUM`] is derived from part of this text.
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
-pub const LIBER_PRIMUS: &'static str = include_str!("liber-primus.txt");
+pub const LIBER_PRIMUS: &str = include_str!("liber-primus.txt");
 
 thread_local! {
     // Markov chain generating lorem ipsum text.
