@@ -22,10 +22,10 @@ jobs:
           - nightly
         os:
           - ubuntu-latest
-          - window-latest
+          - windows-latest
         exclude:
           - rust: nightly
-            os: window-latest
+            os: windows-latest
     runs-on: ${{ matrix.os }}
 
     steps:
