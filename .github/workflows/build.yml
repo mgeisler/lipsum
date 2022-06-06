@@ -40,21 +40,10 @@ jobs:
       - name: Test
         run: cargo test
 
-  # This builds examples and benchmarks, which are not covered above.
-  build-all:
-    name: Build all targets
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Install nightly Rust
-        run: rustup default nightly
-
-      - uses: Swatinem/rust-cache@v1
-
-      - name: Build all targets
-        run: cargo build --all-targets
+      # This checks examples and benchmarks, which are not covered above.
+      - name: Check all targets
+        if: matrix.rust == 'nightly'
+        run: cargo check --all-targets
 
   build-documentation:
     name: Build documentation
