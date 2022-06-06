@@ -1,11 +1,10 @@
 # Lorem Ipsum
 
-[![](https://img.shields.io/crates/v/lipsum.svg)][crates-io]
-[![](https://docs.rs/lipsum/badge.svg)][api-docs]
-[![](https://img.shields.io/badge/rustc-1.31.0-blue.svg)][rust-2018]
 [![](https://travis-ci.org/mgeisler/lipsum.svg?branch=master)][travis-ci]
 [![](https://ci.appveyor.com/api/projects/status/github/mgeisler/lipsum?branch=master&svg=true)][appveyor]
 [![](https://codecov.io/gh/mgeisler/lipsum/branch/master/graph/badge.svg)][codecov]
+[![](https://img.shields.io/crates/v/lipsum.svg)][crates-io]
+[![](https://docs.rs/lipsum/badge.svg)][api-docs]
 
 Lipsum is a small Rust library for generating pseudo-Latin [lorem
 ipsum filler text][lorem ipsum]. This is a standard placeholder text
