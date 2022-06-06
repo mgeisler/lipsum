@@ -344,7 +344,7 @@ fn join_words<'a, I: Iterator<Item = &'a str>>(mut words: I) -> String {
         None => String::new(),
         Some(word) => {
             // Punctuation characters which ends a sentence.
-            let punctuation = &['.', '!', '?'];
+            let punctuation: &[char] = &['.', '!', '?'];
 
             let mut sentence = capitalize(word);
             let mut needs_cap = sentence.ends_with(punctuation);
