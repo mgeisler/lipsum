@@ -23,6 +23,9 @@ jobs:
         os:
           - ubuntu-latest
           - window-latest
+        exclude:
+          - rust: nightly
+            os: window-latest
     runs-on: ${{ matrix.os }}
 
     steps:
