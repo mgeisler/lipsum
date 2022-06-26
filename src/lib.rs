@@ -31,6 +31,7 @@ use rand::seq::SliceRandom;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use std::collections::HashMap;
+use std::time::SystemTime;
 
 /// A bigram is simply two consecutive words.
 pub type Bigram<'a> = (&'a str, &'a str);
@@ -189,10 +190,10 @@ impl<'a> MarkovChain<'a> {
         join_words(self.iter_with_rng(rng).take(n))
     }
 
-    /// Generate a sentence with `n` words of lorem ipsum text. The sentence
-    /// will start from a predetermined point in the Markov chain generated
-    /// using the default random number generator and a `.` will be added as
-    /// necessary to form a full sentence.
+    /// Generate a sentence with `n` words of lorem ipsum text. The
+    /// sentence will start from a random point in the Markov chain
+    /// generated using the default random number generator and a `.`
+    /// will be added as necessary to form a full sentence.
     ///
     /// See [`generate_from`] if you want to control the starting point for the
     /// generated text and see [`iter`] if you simply want a sequence of words.
@@ -260,7 +261,7 @@ impl<'a> MarkovChain<'a> {
     }
 
     /// Make a never-ending iterator over the words in the Markov chain. The
-    /// iterator starts at a predetermined point in the chain.
+    /// iterator starts at a random point in the chain.
     pub fn iter(&self) -> Words<'_, impl Rng> {
         self.iter_with_rng(default_rng())
     }
@@ -283,11 +284,14 @@ impl<'a> MarkovChain<'a> {
     }
 }
 
-/// Provide a default random number generator. This generator is seeded and will
-/// always produce the same sequence of numbers. The seed is chosen to yield
-/// good results for the included Markov chain.
+/// Provide a default random number generator. This generator is
+/// seeded by the current time. Use a different RNG such as
+/// `rand::thread_rng()` if this is not good enough.
 fn default_rng() -> impl Rng {
-    ChaCha20Rng::seed_from_u64(97)
+    let now = SystemTime::now();
+    let unix_epoch = SystemTime::UNIX_EPOCH;
+    let duration_since = now.duration_since(unix_epoch).unwrap_or_default();
+    ChaCha20Rng::seed_from_u64(duration_since.subsec_nanos() as u64)
 }
 
 /// Never-ending iterator over words in the Markov chain.
@@ -415,8 +419,8 @@ thread_local! {
 /// Generate `n` words of lorem ipsum text. The output will always start with
 /// "Lorem ipsum".
 ///
-/// The text continues with the standard lorem ipsum text from [`LOREM_IPSUM`]
-/// and becomes randomly generated but deterministic if more than 18 words is
+/// The text continues with the standard lorem ipsum text from
+/// [`LOREM_IPSUM`] and becomes random if more than 18 words is
 /// requested. See [`lipsum_words`] if fully random text is needed.
 ///
 /// # Examples
@@ -458,18 +462,19 @@ pub fn lipsum_with_rng(rng: impl Rng, n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|chain| chain.generate_with_rng_from(rng, n, ("Lorem", "ipsum")))
 }
 
-/// Generate `n` words of lorem ipsum text.
+/// Generate `n` random words of lorem ipsum text.
 ///
-/// The text is deterministically sampled from a Markov chain based on
-/// [`LOREM_IPSUM`]. Multiple sentences may be generated, depending on the
-/// punctuation of the words being selected.
+/// The text starts with a random word from [`LOREM_IPSUM`]. Multiple
+/// sentences may be generated, depending on the punctuation of the
+/// words being selected.
 ///
 /// # Examples
 ///
 /// ```
 /// use lipsum::lipsum_words;
 ///
-/// assert_eq!(lipsum_words(6), "Ullus investigandi veri, nisi inveneris, et.");
+/// println!("{}", lipsum_words(6));
+/// // -> "Propter soliditatem, censet in infinito inani."
 /// ```
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
