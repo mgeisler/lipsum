@@ -27,9 +27,7 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
-use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
-use rand::thread_rng;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use std::collections::HashMap;
@@ -172,11 +170,12 @@ impl<'a> MarkovChain<'a> {
     ///
     /// ```
     /// use lipsum::MarkovChain;
-    /// use rand::thread_rng;
+    /// use rand_chacha::ChaCha20Rng;
+    /// use rand::SeedableRng;
     ///
     /// let mut chain = MarkovChain::new();
     /// chain.learn("Tick, Tock, Tick, Tock, Ding! Tick, Tock, Ding! Ding!");
-    /// println!("{}", chain.generate_with_rng(thread_rng(), 15));
+    /// println!("{}", chain.generate_with_rng(ChaCha20Rng::seed_from_u64(0), 15));
     /// ```
     ///
     /// The output looks like this:
@@ -190,14 +189,13 @@ impl<'a> MarkovChain<'a> {
         join_words(self.iter_with_rng(rng).take(n))
     }
 
-    /// Generate a sentence with `n` words of lorem ipsum text. The
-    /// sentence will start from a random point in the Markov chain
-    /// generated using the default random number generator and a `.`
-    /// will be added as necessary to form a full sentence.
+    /// Generate a sentence with `n` words of lorem ipsum text. The sentence
+    /// will start from a predetermined point in the Markov chain generated
+    /// using the default random number generator and a `.` will be added as
+    /// necessary to form a full sentence.
     ///
-    /// See [`generate_from`] if you want to control the starting
-    /// point for the generated text and see [`iter`] if you simply
-    /// want a sequence of words.
+    /// See [`generate_from`] if you want to control the starting point for the
+    /// generated text and see [`iter`] if you simply want a sequence of words.
     ///
     /// # Examples
     ///
@@ -219,7 +217,7 @@ impl<'a> MarkovChain<'a> {
     /// [`generate_from`]: struct.MarkovChain.html#method.generate_from
     /// [`iter`]: struct.MarkovChain.html#method.iter
     pub fn generate(&self, n: usize) -> String {
-        self.generate_with_rng(thread_rng(), n)
+        self.generate_with_rng(default_rng(), n)
     }
 
     /// Generate a sentence with `n` words of lorem ipsum text. The
@@ -247,7 +245,7 @@ impl<'a> MarkovChain<'a> {
     /// [`generate`]: struct.MarkovChain.html#method.generate
     /// [`iter_from`]: struct.MarkovChain.html#method.iter_from
     pub fn generate_from(&self, n: usize, from: Bigram<'a>) -> String {
-        self.generate_with_rng_from(thread_rng(), n, from)
+        self.generate_with_rng_from(default_rng(), n, from)
     }
 
     /// Make a never-ending iterator over the words in the Markov
@@ -261,10 +259,10 @@ impl<'a> MarkovChain<'a> {
         self.iter_with_rng_from(rng, initial_bigram)
     }
 
-    /// Make a never-ending iterator over the words in the Markov
-    /// chain. The iterator starts at a random point in the chain.
-    pub fn iter(&self) -> Words<'_, ThreadRng> {
-        self.iter_with_rng(thread_rng())
+    /// Make a never-ending iterator over the words in the Markov chain. The
+    /// iterator starts at a predetermined point in the chain.
+    pub fn iter(&self) -> Words<'_, impl Rng> {
+        self.iter_with_rng(default_rng())
     }
 
     /// Make a never-ending iterator over the words in the Markov
@@ -280,9 +278,16 @@ impl<'a> MarkovChain<'a> {
 
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at the given bigram.
-    pub fn iter_from(&self, from: Bigram<'a>) -> Words<'_, ThreadRng> {
-        self.iter_with_rng_from(thread_rng(), from)
+    pub fn iter_from(&self, from: Bigram<'a>) -> Words<'_, impl Rng> {
+        self.iter_with_rng_from(default_rng(), from)
     }
+}
+
+/// Provide a default random number generator. This generator is seeded and will
+/// always produce the same sequence of numbers. The seed is chosen to yield
+/// good results for the included Markov chain.
+fn default_rng() -> impl Rng {
+    ChaCha20Rng::seed_from_u64(97)
 }
 
 /// Never-ending iterator over words in the Markov chain.
@@ -407,11 +412,11 @@ thread_local! {
     }
 }
 
-/// Generate `n` words of lorem ipsum text. The output will always
-/// start with "Lorem ipsum".
+/// Generate `n` words of lorem ipsum text. The output will always start with
+/// "Lorem ipsum".
 ///
-/// The text continues with the standard lorem ipsum text from
-/// [`LOREM_IPSUM`] and becomes random if more than 18 words is
+/// The text continues with the standard lorem ipsum text from [`LOREM_IPSUM`]
+/// and becomes randomly generated but deterministic if more than 18 words is
 /// requested. See [`lipsum_words`] if fully random text is needed.
 ///
 /// # Examples
@@ -428,42 +433,43 @@ pub fn lipsum(n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|chain| chain.generate_from(n, ("Lorem", "ipsum")))
 }
 
-/// Generate `n` words of lorem ipsum text. The output will always start with
-/// "Lorem ipsum". The seed makes the sequence deterministic.
+/// Generate `n` words of lorem ipsum text with a custom RNG. The output will
+/// always start with "Lorem ipsum".
 ///
-/// Deterministic sequences are useful for unit tests where you need random but
-/// consistent inputs or when users expect an infinitely extendable blind text
-/// string that does not change.
+/// A custom RNG allows to base the markov chain on a different random number
+/// sequence. This also allows using a regular [`thread_rng`] random number
+/// generator. If that generator is used, the text will differ in each
+/// invocation.
 ///
 /// # Examples
 ///
 /// ```
-/// use lipsum::lipsum_from_seed;
+/// use lipsum::lipsum_with_rng;
+/// use rand::thread_rng;
 ///
-/// assert_eq!(lipsum_from_seed(23, 16),
-///     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim.");
+/// println!("{}", lipsum_with_rng(thread_rng(), 23));
+/// // -> "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+/// //     eiusmod tempor incididunt ut labore et dolore magnam aliquam
+/// //     quaerat voluptatem. Ut enim."
 /// ```
 ///
-/// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
-/// [`lipsum`]: fn.lipsum.html
-pub fn lipsum_from_seed(n: usize, seed: u64) -> String {
-    let rng = ChaCha20Rng::seed_from_u64(seed);
+/// [`thread_rng`]: https://docs.rs/rand/latest/rand/fn.thread_rng.html
+pub fn lipsum_with_rng(rng: impl Rng, n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|chain| chain.generate_with_rng_from(rng, n, ("Lorem", "ipsum")))
 }
 
-/// Generate `n` random words of lorem ipsum text.
+/// Generate `n` words of lorem ipsum text.
 ///
-/// The text starts with a random word from [`LOREM_IPSUM`]. Multiple
-/// sentences may be generated, depending on the punctuation of the
-/// words being selected.
+/// The text is deterministically sampled from a Markov chain based on
+/// [`LOREM_IPSUM`]. Multiple sentences may be generated, depending on the
+/// punctuation of the words being selected.
 ///
 /// # Examples
 ///
 /// ```
 /// use lipsum::lipsum_words;
 ///
-/// println!("{}", lipsum_words(6));
-/// // -> "Propter soliditatem, censet in infinito inani."
+/// assert_eq!(lipsum_words(6), "Ullus investigandi veri, nisi inveneris, et.");
 /// ```
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
@@ -471,26 +477,25 @@ pub fn lipsum_words(n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|chain| chain.generate(n))
 }
 
-/// Generate `n` random words of lorem ipsum text. The seed makes the sequence
-/// deterministic.
+/// Generate `n` words of lorem ipsum text with a custom RNG.
 ///
-/// Deterministic sequences are useful for unit tests where you need random but
-/// consistent inputs or when users expect an infinitely extendable blind text
-/// string that does not change.
+/// A custom RNG allows to base the markov chain on a different random number
+/// sequence. This also allows using a regular [`thread_rng`] random number
+/// generator. If that generator is used, the text will differ in each
+/// invocation.
 ///
 /// # Examples
 ///
 /// ```
-/// use lipsum::lipsum_words_from_seed;
+/// use lipsum::lipsum_words_with_rng;
+/// use rand::thread_rng;
 ///
-/// assert_eq!(lipsum_words_from_seed(7, 1234),
-///            "Anteponant iis, quae recordamur. Stulti autem malorum.");
+/// println!("{}", lipsum_words_with_rng(thread_rng(), 7));
+/// // -> "Quot homines, tot sententiae; falli igitur possumus."
 /// ```
 ///
-/// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
-/// [`lipsum_words`]: fn.lipsum_words.html
-pub fn lipsum_words_from_seed(n: usize, seed: u64) -> String {
-    let rng = ChaCha20Rng::seed_from_u64(seed);
+/// [`thread_rng`]: https://docs.rs/rand/latest/rand/fn.thread_rng.html
+pub fn lipsum_words_with_rng(rng: impl Rng, n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|chain| chain.generate_with_rng(rng, n))
 }
 
@@ -521,7 +526,7 @@ const TITLE_SMALL_WORD: usize = 3;
 /// heading.
 pub fn lipsum_title() -> String {
     LOREM_IPSUM_CHAIN.with(|chain| {
-        let n = thread_rng().gen_range(TITLE_MIN_WORDS..TITLE_MAX_WORDS);
+        let n = default_rng().gen_range(TITLE_MIN_WORDS..TITLE_MAX_WORDS);
         // The average word length with our corpus is 7.6 bytes so
         // this capacity will avoid most allocations.
         let mut title = String::with_capacity(8 * n);
@@ -551,7 +556,7 @@ pub fn lipsum_title() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::SeedableRng;
+    use rand::{thread_rng, SeedableRng};
     use rand_chacha::ChaCha20Rng;
 
     #[test]
@@ -579,7 +584,10 @@ mod tests {
         // Check that calls to lipsum_words don't always start with
         // "Lorem ipsum".
         let idx = "Lorem ipsum".len();
-        assert_ne!(&lipsum_words(5)[..idx], &lipsum_words(5)[..idx]);
+        assert_ne!(
+            &lipsum_words_with_rng(thread_rng(), 5)[..idx],
+            &lipsum_words_with_rng(thread_rng(), 5)[..idx]
+        );
     }
 
     #[test]
@@ -608,7 +616,7 @@ mod tests {
         // must ensure that every word appearing after sentence-ending
         // punctuation is capitalized.
         assert_eq!(
-            lipsum_words_from_seed(9, 5),
+            lipsum_words_with_rng(ChaCha20Rng::seed_from_u64(5), 9),
             "Nullam habuit. Voluptatem cum summum bonum in voluptate est."
         );
     }
@@ -672,19 +680,5 @@ mod tests {
             chain.generate_with_rng(rng, 15),
             "A b bar a b a b bar a b x y b y x."
         );
-    }
-
-    #[test]
-    fn seed_works() {
-        assert_eq!(
-            lipsum_words_from_seed(10, 100_000),
-            lipsum_words_from_seed(10, 100_000)
-        );
-        assert_eq!(lipsum_from_seed(30, 100_000), lipsum_from_seed(30, 100_000));
-        assert_ne!(
-            lipsum_words_from_seed(10, 100_000),
-            lipsum_words_from_seed(10, 100_001)
-        );
-        assert_ne!(lipsum_from_seed(30, 100_000), lipsum_from_seed(30, 100_001));
     }
 }
