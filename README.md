@@ -79,13 +79,13 @@ This is a changelog with the most important changes in each release.
 * [#77](https://github.com/mgeisler/lipsum/pull/77): Update to Rust
   2021 edition.
 
-### Version 0.8.0 — May 30th, 2021
+### Version 0.8.0 (2021-05-30)
 
 The random number generator has been separated from the `MarkovChain`
 implementation to allow using the same trained model to generate
 multiple outputs with different seeds. Thanks @Diggsey!
 
-### Version 0.7.0 — July 8th, 2020
+### Version 0.7.0 (2020-07-08)
 
 -   The code has been updated to the [Rust 2018 edition][rust-2018].
 
@@ -99,7 +99,7 @@ multiple outputs with different seeds. Thanks @Diggsey!
     deterministic lorem ipsum text. This is useful in unit tests when
     you need fixed inputs.
 
-### Version 0.6.0 — December 9th, 2018
+### Version 0.6.0 (2018-12-09)
 
 The new `lipsum_words` function can be used to generate random lorem
 ipsum text that doesn't always start with "Lorem ipsum".
@@ -107,7 +107,7 @@ ipsum text that doesn't always start with "Lorem ipsum".
 Dependencies were updated and the oldest supported version of Rust is
 now 1.22.
 
-### Version 0.5.0 — April 22nd, 2018
+### Version 0.5.0 (2018-04-22)
 
 The new `lipsum_title` function can be used to generate a short string
 suitable for a document title or a section heading.
@@ -115,14 +115,14 @@ suitable for a document title or a section heading.
 Dependencies were updated and the oldest supported version of Rust is
 now 1.17.
 
-### Version 0.4.0 — September 24th, 2017
+### Version 0.4.0 (2017-09-24)
 
 The `generate` and `generate_from` now always generate proper
 sentences, meaning that they generate sentences that start with a
 capital letter and end with `.` or some other punctuation character.
 Use `iter` and `iter_from` directly if you need more control.
 
-### Version 0.3.0 — July 28th, 2017
+### Version 0.3.0 (2017-07-28)
 
 Performance is improved by about 50% when generating text, but
 training the Markov chain now takes about twice as long as before.
@@ -143,11 +143,11 @@ The `MarkovChain` struct has many new methods:
     `is_empty` tells you if the Markov chain is empty, meaning that it
     hasn't been trained on anything yet.
 
-### Version 0.2.0 — July 10th, 2017
+### Version 0.2.0 (2017-07-10)
 
 Rust version 1.6.0 is now supported. This is checked with TravisCI.
 
-### Version 0.1.0 — July 2nd, 2017
+### Version 0.1.0 (2017-07-2)
 
 First public release.
 
