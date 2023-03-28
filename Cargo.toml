@@ -1,6 +1,6 @@
 [package]
 name = "lipsum"
-version = "0.8.2"
+version = "0.9.0"
 authors = ["Martin Geisler <martin@geisler.net>"]
 description = """
 Lipsum is a lorem ipsum text generation library. It generates

@@ -25,7 +25,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-lipsum = "0.8"
+lipsum = "0.9"
 ```
 
 ## Documentation
