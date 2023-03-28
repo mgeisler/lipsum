@@ -25,7 +25,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-lipsum = "0.8"
+lipsum = "0.9"
 ```
 
 ## Documentation
@@ -66,6 +66,13 @@ all words.
 ## Release History
 
 This is a changelog with the most important changes in each release.
+
+### Version 0.9.0 (2023-03-28)
+
+* [#90](https://github.com/mgeisler/lipsum/pull/90): Test minimum
+  supported Rust version (Rust 1.56) in CI
+* [#91](https://github.com/mgeisler/lipsum/pull/91): Remove dependency
+  on system randomness
 
 ### Version 0.8.2 (2022-06-06)
 
