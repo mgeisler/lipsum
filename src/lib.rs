@@ -458,6 +458,30 @@ pub fn lipsum_with_rng(rng: impl Rng, n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|chain| chain.generate_with_rng_from(rng, n, ("Lorem", "ipsum")))
 }
 
+/// Generate `n` words of lorem ipsum text. The output will always start with
+/// "Lorem ipsum". The seed makes the sequence deterministic.
+///
+/// Deterministic sequences are useful for unit tests where you need random but
+/// consistent inputs or when users expect an infinitely extendable blind text
+/// string that does not change.
+///
+/// # Examples
+///
+/// ```
+/// use lipsum::lipsum_from_seed;
+///
+/// assert_eq!(lipsum_from_seed(23, 16),
+///     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim.");
+/// ```
+///
+/// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
+/// [`lipsum`]: fn.lipsum.html
+pub fn lipsum_from_seed(n: usize, seed: u64) -> String {
+    let rng = ChaCha20Rng::seed_from_u64(seed);
+    LOREM_IPSUM_CHAIN.with(|chain| chain.generate_with_rng_from(rng, n, ("Lorem", "ipsum")))
+}
+
+
 /// Generate `n` words of lorem ipsum text.
 ///
 /// The text is deterministically sampled from a Markov chain based on
@@ -498,6 +522,30 @@ pub fn lipsum_words(n: usize) -> String {
 pub fn lipsum_words_with_rng(rng: impl Rng, n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|chain| chain.generate_with_rng(rng, n))
 }
+
+/// Generate `n` random words of lorem ipsum text. The seed makes the sequence
+/// deterministic.
+///
+/// Deterministic sequences are useful for unit tests where you need random but
+/// consistent inputs or when users expect an infinitely extendable blind text
+/// string that does not change.
+///
+/// # Examples
+///
+/// ```
+/// use lipsum::lipsum_words_from_seed;
+///
+/// assert_eq!(lipsum_words_from_seed(7, 1234),
+///            "Anteponant iis, quae recordamur. Stulti autem malorum.");
+/// ```
+///
+/// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
+/// [`lipsum_words`]: fn.lipsum_words.html
+pub fn lipsum_words_from_seed(n: usize, seed: u64) -> String {
+    let rng = ChaCha20Rng::seed_from_u64(seed);
+    LOREM_IPSUM_CHAIN.with(|chain| chain.generate_with_rng(rng, n))
+}
+
 
 /// Minimum number of words to include in a title.
 const TITLE_MIN_WORDS: usize = 3;
@@ -680,5 +728,19 @@ mod tests {
             chain.generate_with_rng(rng, 15),
             "A b bar a b a b bar a b x y b y x."
         );
+    }
+
+    #[test]
+    fn seed_works() {
+        assert_eq!(
+            lipsum_words_from_seed(10, 100_000),
+            lipsum_words_from_seed(10, 100_000)
+        );
+        assert_eq!(lipsum_from_seed(30, 100_000), lipsum_from_seed(30, 100_000));
+        assert_ne!(
+            lipsum_words_from_seed(10, 100_000),
+            lipsum_words_from_seed(10, 100_001)
+        );
+        assert_ne!(lipsum_from_seed(30, 100_000), lipsum_from_seed(30, 100_001));
     }
 }
