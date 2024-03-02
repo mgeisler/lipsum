@@ -525,14 +525,44 @@ const TITLE_SMALL_WORD: usize = 3;
 /// which should be suitable for use in a document title for section
 /// heading.
 pub fn lipsum_title() -> String {
+    lipsum_title_with_rng(default_rng())
+}
+
+/// Generate a short lorem ipsum text with words in title case with a custom RNG.
+///
+/// A custom RNG allows to base the markov chain on a different random number
+/// sequence. This also allows using a regular [`thread_rng`] random number
+/// generator. If that generator is used, the text will differ in each
+/// invocation.
+///
+/// The words are capitalized and stripped for punctuation characters.
+///
+/// # Examples
+///
+/// ```
+/// use lipsum::lipsum_title_with_rng;
+/// use rand::thread_rng;
+///
+/// println!("{}", lipsum_title_with_rng(thread_rng()));
+/// ```
+///
+/// This will generate a string like
+///
+/// > Grate Meminit et Praesentibus
+///
+/// which should be suitable for use in a document title for section
+/// heading.
+///
+/// [`thread_rng`]: https://docs.rs/rand/latest/rand/fn.thread_rng.html
+pub fn lipsum_title_with_rng(mut rng: impl Rng) -> String {
     LOREM_IPSUM_CHAIN.with(|chain| {
-        let n = default_rng().gen_range(TITLE_MIN_WORDS..TITLE_MAX_WORDS);
+        let n = rng.gen_range(TITLE_MIN_WORDS..TITLE_MAX_WORDS);
         // The average word length with our corpus is 7.6 bytes so
         // this capacity will avoid most allocations.
         let mut title = String::with_capacity(8 * n);
 
         let words = chain
-            .iter()
+            .iter_with_rng(rng)
             .map(|word| word.trim_matches(is_ascii_punctuation))
             .filter(|word| !word.is_empty())
             .take(n);
