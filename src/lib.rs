@@ -23,7 +23,7 @@
 //! [`learn`]: struct.MarkovChain.html#method.learn
 //! [Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
 
-#![doc(html_root_url = "https://docs.rs/lipsum/0.9.0")]
+#![doc(html_root_url = "https://docs.rs/lipsum/0.9.1")]
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
