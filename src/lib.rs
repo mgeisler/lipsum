@@ -556,8 +556,7 @@ pub fn lipsum_title() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::{thread_rng, SeedableRng};
-    use rand_chacha::ChaCha20Rng;
+    use rand::thread_rng;
 
     #[test]
     fn starts_with_lorem_ipsum() {
