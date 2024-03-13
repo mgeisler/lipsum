@@ -67,6 +67,15 @@ all words.
 
 This is a changelog with the most important changes in each release.
 
+### Version 0.9.1 (2024-03-13)
+
+* [#100](https://github.com/mgeisler/lipsum/pull/100): Add
+  `lipsum_title_with_rng` function.
+* [#102](https://github.com/mgeisler/lipsum/pull/102): Document MSRV in
+  `Cargo.toml`.
+* [#103](https://github.com/mgeisler/lipsum/pull/103): Enable dependabot
+  updates.
+
 ### Version 0.9.0 (2023-03-28)
 
 * [#90](https://github.com/mgeisler/lipsum/pull/90): Test minimum
