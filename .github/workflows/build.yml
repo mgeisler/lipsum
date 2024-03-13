@@ -18,7 +18,6 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.56
           - stable
           - nightly
         os:
@@ -46,6 +45,22 @@ jobs:
       - name: Check all targets
         if: matrix.rust == 'nightly'
         run: cargo check --all-targets
+
+  msrv:
+    name: Build MSRV
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        run: rustup default 1.56
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build
+        run: cargo build
 
   build-documentation:
     name: Build documentation
