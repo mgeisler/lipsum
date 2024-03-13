@@ -96,7 +96,7 @@ impl<'a> MarkovChain<'a> {
         let words = sentence.split_whitespace().collect::<Vec<&str>>();
         for window in words.windows(3) {
             let (a, b, c) = (window[0], window[1], window[2]);
-            self.map.entry((a, b)).or_insert_with(Vec::new).push(c);
+            self.map.entry((a, b)).or_default().push(c);
         }
         // Sync the keys with the current map.
         self.keys = self.map.keys().cloned().collect();
