@@ -27,6 +27,7 @@ jobs:
         exclude:
           - rust: nightly
             os: windows-latest
+      fail-fast: false
     runs-on: ${{ matrix.os }}
 
     steps:
