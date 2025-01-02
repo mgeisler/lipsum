@@ -1,6 +1,6 @@
 # Lorem Ipsum
 
-[![](https://github.com/mgeisler/textwrap/workflows/build/badge.svg)][build-status]
+[![](https://github.com/mgeisler/lipsum/actions/workflows/build.yml/badge.svg)][build-status]
 [![](https://codecov.io/gh/mgeisler/lipsum/branch/master/graph/badge.svg)][codecov]
 [![](https://img.shields.io/crates/v/lipsum.svg)][crates-io]
 [![](https://docs.rs/lipsum/badge.svg)][api-docs]
@@ -172,7 +172,7 @@ First public release.
 Lipsum can be distributed according to the [MIT license][mit].
 Contributions will be accepted under the same license.
 
-[build-status]: https://github.com/mgeisler/lipsum/actions?query=workflow%3Abuild+branch%3Amaster
+[build-status]: https://github.com/mgeisler/lipsum/actions/workflows/build.yml
 [codecov]: https://codecov.io/gh/mgeisler/lipsum
 [crates-io]: https://crates.io/crates/lipsum
 [api-docs]: https://docs.rs/lipsum/
