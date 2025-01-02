@@ -54,8 +54,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Rust
-        run: rustup default 1.56
+      - name: Detect MSRV
+        run: echo MSRV=$(grep 'rust-version' Cargo.toml | cut -d '"' -f 2) >> "$GITHUB_ENV"
+
+      - name: Install Rust  ${{ env.MSRV }}
+        run: rustup default $MSRV
 
       - uses: Swatinem/rust-cache@v2
 
