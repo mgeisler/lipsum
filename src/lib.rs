@@ -27,7 +27,7 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
-use rand::seq::SliceRandom;
+use rand::seq::IndexedRandom as _;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use std::collections::HashMap;
@@ -70,7 +70,7 @@ impl<'a> MarkovChain<'a> {
     /// // The chain jumps consistently like this:
     /// assert_eq!(chain.generate_with_rng(&mut rng, 1), "Orange.");
     /// assert_eq!(chain.generate_with_rng(&mut rng, 1), "Infra-red.");
-    /// assert_eq!(chain.generate_with_rng(&mut rng, 1), "Yellow.");
+    /// assert_eq!(chain.generate_with_rng(&mut rng, 1), "Blue.");
     /// # }
     /// ```
     pub fn new() -> MarkovChain<'a> {
@@ -556,7 +556,7 @@ pub fn lipsum_title() -> String {
 /// [`thread_rng`]: https://docs.rs/rand/latest/rand/fn.thread_rng.html
 pub fn lipsum_title_with_rng(mut rng: impl Rng) -> String {
     LOREM_IPSUM_CHAIN.with(|chain| {
-        let n = rng.gen_range(TITLE_MIN_WORDS..TITLE_MAX_WORDS);
+        let n = rng.random_range(TITLE_MIN_WORDS..TITLE_MAX_WORDS);
         // The average word length with our corpus is 7.6 bytes so
         // this capacity will avoid most allocations.
         let mut title = String::with_capacity(8 * n);
@@ -586,7 +586,7 @@ pub fn lipsum_title_with_rng(mut rng: impl Rng) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::thread_rng;
+    use rand::rng;
 
     #[test]
     fn starts_with_lorem_ipsum() {
@@ -614,8 +614,8 @@ mod tests {
         // "Lorem ipsum".
         let idx = "Lorem ipsum".len();
         assert_ne!(
-            &lipsum_words_with_rng(thread_rng(), 5)[..idx],
-            &lipsum_words_with_rng(thread_rng(), 5)[..idx]
+            &lipsum_words_with_rng(rng(), 5)[..idx],
+            &lipsum_words_with_rng(rng(), 5)[..idx]
         );
     }
 
@@ -646,7 +646,7 @@ mod tests {
         // punctuation is capitalized.
         assert_eq!(
             lipsum_words_with_rng(ChaCha20Rng::seed_from_u64(5), 9),
-            "Nullam habuit. Voluptatem cum summum bonum in voluptate est."
+            "Nullam habuit. Voluptatem cum summum bonum in voluptate aut."
         );
     }
 
@@ -707,7 +707,7 @@ mod tests {
 
         assert_eq!(
             chain.generate_with_rng(rng, 15),
-            "A b bar a b a b bar a b x y b y x."
+            "A b bar a b x y y b bar x y y b x."
         );
     }
 }
