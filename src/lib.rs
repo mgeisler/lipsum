@@ -46,8 +46,11 @@ pub type Bigram<'a> = (&'a str, &'a str);
 /// [Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
 /// [blog post]: https://blakewilliams.me/posts/generating-arbitrary-text-with-markov-chains-in-rust
 #[derive(Debug, Clone, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MarkovChain<'a> {
+    #[cfg_attr(feature = "serde", serde(borrow))]
     map: HashMap<Bigram<'a>, Vec<&'a str>>,
+    #[cfg_attr(feature = "serde", serde(borrow))]
     keys: Vec<Bigram<'a>>,
 }
 

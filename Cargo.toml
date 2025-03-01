@@ -19,9 +19,14 @@ license = "MIT"
 edition = "2021"
 rust-version = "1.63"
 
+[features]
+default = []
+serde = ["dep:serde"]
+
 [dependencies]
 rand = {version = "0.9", default-features = false, features = ["alloc"]}
 rand_chacha = "0.9"
+serde = {version = "1", features = ["derive"], optional = true}
 
 [dev-dependencies]
 version-sync = "0.9.4"
