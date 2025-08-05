@@ -45,9 +45,12 @@ pub type Bigram<'a> = (&'a str, &'a str);
 ///
 /// [Markov chain]: https://en.wikipedia.org/wiki/Markov_chain
 /// [blog post]: https://blakewilliams.me/posts/generating-arbitrary-text-with-markov-chains-in-rust
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MarkovChain<'a> {
+    #[cfg_attr(feature = "serde", serde(borrow))]
     map: HashMap<Bigram<'a>, Vec<&'a str>>,
+    #[cfg_attr(feature = "serde", serde(borrow))]
     keys: Vec<Bigram<'a>>,
 }
 
@@ -709,5 +712,27 @@ mod tests {
             chain.generate_with_rng(rng, 15),
             "A b bar a b x y y b bar x y y b x."
         );
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn serde_support() {
+        let mut chain = MarkovChain::new();
+        chain.learn("foo bar baz");
+
+        // Test that we can serialize and deserialize. Note that we
+        // cannot use `serde_json` here since JSON objects don't
+        // support non-string (we use string tuples for our keys).
+        let bytes = postcard::to_allocvec(&chain).unwrap();
+        assert_eq!(
+            bytes,
+            &[
+                0x01, 0x03, 0x66, 0x6f, 0x6f, 0x03, 0x62, 0x61, 0x72, 0x01, 0x03, 0x62, 0x61, 0x7a,
+                0x01, 0x03, 0x66, 0x6f, 0x6f, 0x03, 0x62, 0x61, 0x72,
+            ]
+        );
+
+        let deserialized_chain = postcard::from_bytes(&bytes).unwrap();
+        assert_eq!(chain, deserialized_chain);
     }
 }
