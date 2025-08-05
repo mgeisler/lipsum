@@ -17,7 +17,7 @@ keywords = ["random", "text", "markov", "typography"]
 categories = ["text-processing"]
 license = "MIT"
 edition = "2021"
-rust-version = "1.61"
+rust-version = "1.63"
 
 [dependencies]
 rand = {version = "0.8.5", default-features = false, features = ["alloc"]}
