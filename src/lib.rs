@@ -239,7 +239,8 @@ impl<'a> MarkovChain<'a> {
 
     /// Generate a sentence with `n` words of lorem ipsum text. The
     /// sentence will start from the given bigram and a `.` will be
-    /// added as necessary to form a full sentence.
+    /// added as necessary to form a full sentence. If the bigram is
+    /// not found in the chain, a random one will be chosen.
     ///
     /// Use [`generate`] if the starting point is not important. See
     /// [`iter_from`] if you want a sequence of words that you can
@@ -253,13 +254,10 @@ impl<'a> MarkovChain<'a> {
 
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at a random point in the chain.
-    pub fn iter_with_rng<R: Rng>(&self, mut rng: R) -> Words<'_, R> {
-        let initial_bigram = if self.is_empty() {
-            ("", "")
-        } else {
-            *self.keys.choose(&mut rng).unwrap()
-        };
-        self.iter_with_rng_from(rng, initial_bigram)
+    pub fn iter_with_rng<R: Rng>(&self, rng: R) -> Words<'_, R> {
+        // Pass a non-existent bigram to `iter_with_rng_from`. This will
+        // cause it to pick a random starting point.
+        self.iter_with_rng_from(rng, ("", ""))
     }
 
     /// Make a never-ending iterator over the words in the Markov chain. The
@@ -270,12 +268,17 @@ impl<'a> MarkovChain<'a> {
 
     /// Make a never-ending iterator over the words in the Markov
     /// chain. The iterator starts at the given bigram.
-    pub fn iter_with_rng_from<R: Rng>(&self, rng: R, from: Bigram<'a>) -> Words<'_, R> {
+    pub fn iter_with_rng_from<R: Rng>(&self, mut rng: R, from: Bigram<'a>) -> Words<'_, R> {
+        let state = if self.map.contains_key(&from) {
+            from
+        } else {
+            *self.keys.choose(&mut rng).unwrap_or(&("", ""))
+        };
         Words {
             map: &self.map,
             rng,
             keys: &self.keys,
-            state: from,
+            state,
         }
     }
 
@@ -711,6 +714,18 @@ mod tests {
         assert_eq!(
             chain.generate_with_rng(rng, 15),
             "A b bar a b x y y b bar x y y b x."
+        );
+    }
+
+    #[test]
+    fn generate_from_invalid_bigram() {
+        let mut chain = MarkovChain::new();
+        chain.learn("one two three four five six seven");
+        // This bigram is not in the chain.
+        let mut rng = ChaCha20Rng::seed_from_u64(123);
+        assert_eq!(
+            chain.generate_with_rng_from(&mut rng, 3, ("zero", "one")),
+            "Three four five."
         );
     }
 
