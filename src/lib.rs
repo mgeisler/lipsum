@@ -741,6 +741,15 @@ mod tests {
     }
 
     #[test]
+    fn skips_double_dashes() {
+        let mut mark = MarkovChain::new();
+
+        mark.learn("Hello -- -- World Something");
+
+        assert_eq!(mark.generate_from(2, ("Hello", "--")).split(' ').count(), 4)
+    }
+
+    #[test]
     fn generate_from_invalid_bigram() {
         let mut chain = MarkovChain::new();
         chain.learn("one two three four five six seven");
