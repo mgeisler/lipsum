@@ -189,7 +189,7 @@ impl<'a> MarkovChain<'a> {
     /// [`generate_with_rng_from`]: struct.MarkovChain.html#method.generate_with_rng_from
     /// [`iter_with_rng`]: struct.MarkovChain.html#method.iter_with_rng
     pub fn generate_with_rng<R: Rng>(&self, rng: R, n: usize) -> String {
-        join_words(self.iter_with_rng(rng).take(n))
+        join_words(skip_double_dashes(self.iter_with_rng(rng), n))
     }
 
     /// Generate a sentence with `n` words of lorem ipsum text. The sentence
@@ -234,7 +234,7 @@ impl<'a> MarkovChain<'a> {
     /// [`generate_with_rng`]: struct.MarkovChain.html#method.generate_with_rng
     /// [`iter_with_rng_from`]: struct.MarkovChain.html#method.iter_with_rng_from
     pub fn generate_with_rng_from<R: Rng>(&self, rng: R, n: usize, from: Bigram<'a>) -> String {
-        join_words(self.iter_with_rng_from(rng, from).take(n))
+        join_words(skip_double_dashes(self.iter_with_rng_from(rng, from), n))
     }
 
     /// Generate a sentence with `n` words of lorem ipsum text. The
@@ -586,6 +586,29 @@ pub fn lipsum_title_with_rng(mut rng: impl Rng) -> String {
             }
         }
         title
+    })
+}
+
+fn skip_double_dashes<'a>(
+    mut s: impl Iterator<Item = &'a str>,
+    mut n: usize,
+) -> impl Iterator<Item = &'a str> {
+    // This is needed to simulate take n lazyness
+    // other approaches like take while still evaluate one more than needed
+    // which results in changing randomness in repeating calls
+    std::iter::from_fn(move || {
+        if n == 0 {
+            return None;
+        }
+        match s.next() {
+            Some(s) => {
+                if s != "--" {
+                    n -= 1;
+                }
+                Some(s)
+            }
+            None => None,
+        }
     })
 }
 
