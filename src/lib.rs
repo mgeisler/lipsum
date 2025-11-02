@@ -90,10 +90,10 @@ impl<'a> MarkovChain<'a> {
     ///
     /// let mut chain = MarkovChain::new();
     /// chain.learn("red green blue");
-    /// assert_eq!(chain.words(("red", "green")), Some(&vec!["blue"]));
+    /// assert_eq!(chain.words(("red", "green")), &["blue"]);
     ///
     /// chain.learn("red green yellow");
-    /// assert_eq!(chain.words(("red", "green")), Some(&vec!["blue", "yellow"]));
+    /// assert_eq!(chain.words(("red", "green")), &["blue", "yellow"]);
     /// ```
     pub fn learn(&mut self, sentence: &'a str) {
         let words = sentence.split_whitespace().collect::<Vec<&str>>();
@@ -141,8 +141,7 @@ impl<'a> MarkovChain<'a> {
         self.len() == 0
     }
 
-    /// Get the possible words following the given bigram, or `None`
-    /// if the state is invalid.
+    /// Get the possible words following the given bigram.
     ///
     /// # Examples
     ///
@@ -151,11 +150,14 @@ impl<'a> MarkovChain<'a> {
     ///
     /// let mut chain = MarkovChain::new();
     /// chain.learn("red green blue");
-    /// assert_eq!(chain.words(("red", "green")), Some(&vec!["blue"]));
-    /// assert_eq!(chain.words(("foo", "bar")), None);
+    /// assert_eq!(chain.words(("red", "green")), &["blue"]);
+    /// assert!(chain.words(("foo", "bar")).is_empty());
     /// ```
-    pub fn words(&self, state: Bigram<'a>) -> Option<&Vec<&str>> {
-        self.map.get(&state)
+    pub fn words(&self, state: Bigram<'a>) -> &[&str] {
+        match self.map.get(&state) {
+            None => &[],
+            Some(words) => words.as_slice(),
+        }
     }
 
     /// Generate a sentence with `n` words of lorem ipsum text. The
