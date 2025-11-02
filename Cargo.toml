@@ -17,7 +17,7 @@ keywords = ["random", "text", "markov", "typography"]
 categories = ["text-processing"]
 license = "MIT"
 edition = "2021"
-rust-version = "1.63"
+rust-version = "1.65"
 
 [features]
 default = []

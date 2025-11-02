@@ -351,40 +351,39 @@ fn capitalize(word: &str) -> String {
 /// and the generated sentence will end with `'.'` if it doesn't
 /// already end with some other ASCII punctuation character.
 fn join_words<'a, I: Iterator<Item = &'a str>>(mut words: I) -> String {
-    match words.next() {
-        None => String::new(),
-        Some(word) => {
-            // Punctuation characters which ends a sentence.
-            let punctuation: &[char] = &['.', '!', '?'];
+    let Some(word) = words.next() else {
+        return String::new();
+    };
 
-            let mut sentence = capitalize(word);
-            let mut needs_cap = sentence.ends_with(punctuation);
+    // Punctuation characters which ends a sentence.
+    let punctuation: &[char] = &['.', '!', '?'];
 
-            // Add remaining words.
-            for word in words {
-                sentence.push(' ');
+    let mut sentence = capitalize(word);
+    let mut needs_cap = sentence.ends_with(punctuation);
 
-                if needs_cap {
-                    sentence.push_str(&capitalize(word));
-                } else {
-                    sentence.push_str(word);
-                }
+    // Add remaining words.
+    for word in words {
+        sentence.push(' ');
 
-                needs_cap = word.ends_with(punctuation);
-            }
-
-            // Ensure the sentence ends with either one of ".!?".
-            if !sentence.ends_with(punctuation) {
-                // Trim all trailing punctuation characters to avoid
-                // adding '.' after a ',' or similar.
-                let idx = sentence.trim_end_matches(is_ascii_punctuation).len();
-                sentence.truncate(idx);
-                sentence.push('.');
-            }
-
-            sentence
+        if needs_cap {
+            sentence.push_str(&capitalize(word));
+        } else {
+            sentence.push_str(word);
         }
+
+        needs_cap = word.ends_with(punctuation);
     }
+
+    // Ensure the sentence ends with either one of ".!?".
+    if !sentence.ends_with(punctuation) {
+        // Trim all trailing punctuation characters to avoid adding
+        // '.' after a ',' or similar.
+        let idx = sentence.trim_end_matches(is_ascii_punctuation).len();
+        sentence.truncate(idx);
+        sentence.push('.');
+    }
+
+    sentence
 }
 
 /// The traditional lorem ipsum text as given in [Wikipedia]. Using
