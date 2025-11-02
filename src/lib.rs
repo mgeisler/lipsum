@@ -729,6 +729,23 @@ mod tests {
         );
     }
 
+    #[test]
+    fn join_words_add_full_stop() {
+        assert_eq!(join_words(["foo", "bar"].into_iter()), "Foo bar.");
+    }
+
+    #[test]
+    fn join_words_keeps_punctuation() {
+        assert_eq!(join_words(["foo", "bar!"].into_iter()), "Foo bar!");
+    }
+
+    #[test]
+    #[should_panic]
+    fn join_words_keeps_dash_word() {
+        // This is a bug, see #115.
+        assert_eq!(join_words(["foo", "--"].into_iter()), "Foo --");
+    }
+
     #[cfg(feature = "serde")]
     #[test]
     fn serde_support() {
