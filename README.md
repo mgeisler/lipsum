@@ -67,6 +67,22 @@ all words.
 
 This is a changelog with the most important changes in each release.
 
+### Version 0.9.2 (2026-01-01)
+
+* [#107](https://github.com/mgeisler/lipsum/pull/107): Bump codecov/codecov-action from 3 to 5
+* [#108](https://github.com/mgeisler/lipsum/pull/108): Run dependabot monthly
+* [#109](https://github.com/mgeisler/lipsum/pull/109): Bump MSRV to 1.61 to accommodate our dependencies
+* [#110](https://github.com/mgeisler/lipsum/pull/110): Fix build status badge
+* [#113](https://github.com/mgeisler/lipsum/pull/113): Add `serde` feature to allow serializing Markov chains
+* [#117](https://github.com/mgeisler/lipsum/pull/117): Adapt to API changes in rand 0.9
+* [#118](https://github.com/mgeisler/lipsum/pull/118): Fix invalid starting bigram handling
+* [#119](https://github.com/mgeisler/lipsum/pull/119): Bump actions/checkout from 4 to 5
+* [#120](https://github.com/mgeisler/lipsum/pull/120): Add GitHub Sponsors configuration
+* [#122](https://github.com/mgeisler/lipsum/pull/122): Add a few unit tests for `join_words`
+* [#123](https://github.com/mgeisler/lipsum/pull/123): Use `let-else` for early return
+* [#124](https://github.com/mgeisler/lipsum/pull/124): Turn `MarkovChain::words` into a slice
+* [#125](https://github.com/mgeisler/lipsum/pull/125): Bump actions/checkout from 5 to 6
+
 ### Version 0.9.1 (2024-03-13)
 
 * [#100](https://github.com/mgeisler/lipsum/pull/100): Add
