@@ -12,7 +12,6 @@ env:
   RUSTFLAGS: -D warnings
 
 jobs:
-
   build:
     name: Build
     strategy:
