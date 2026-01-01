@@ -506,6 +506,50 @@ pub fn lipsum_words_with_rng(rng: impl Rng, n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|chain| chain.generate_with_rng(rng, n))
 }
 
+/// Generate `n` words of lorem ipsum text with a deterministic seed.
+///
+/// This function is equivalent to [`lipsum`] but takes a seed for the random
+/// number generator. This ensures that the generated text is always the same
+/// for a given seed.
+///
+/// # Examples
+///
+/// ```
+/// use lipsum::lipsum_from_seed;
+///
+/// assert_eq!(
+///     lipsum_from_seed(42, 7),
+///     "Lorem ipsum dolor sit amet, consectetur adipiscing."
+/// );
+/// ```
+///
+/// [`lipsum`]: fn.lipsum.html
+pub fn lipsum_from_seed(seed: u64, n: usize) -> String {
+    lipsum_with_rng(ChaCha20Rng::seed_from_u64(seed), n)
+}
+
+/// Generate `n` words of lorem ipsum text with a deterministic seed.
+///
+/// This function is equivalent to [`lipsum_words`] but takes a seed for the
+/// random number generator. This ensures that the generated text is always the
+/// same for a given seed.
+///
+/// # Examples
+///
+/// ```
+/// use lipsum::lipsum_words_from_seed;
+///
+/// assert_eq!(
+///     lipsum_words_from_seed(42, 6),
+///     "Sensibus; qui si omnes atomi declinabunt."
+/// );
+/// ```
+///
+/// [`lipsum_words`]: fn.lipsum_words.html
+pub fn lipsum_words_from_seed(seed: u64, n: usize) -> String {
+    lipsum_words_with_rng(ChaCha20Rng::seed_from_u64(seed), n)
+}
+
 /// Minimum number of words to include in a title.
 const TITLE_MIN_WORDS: usize = 3;
 /// Maximum number of words to include in a title.
