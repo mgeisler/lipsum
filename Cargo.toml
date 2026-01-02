@@ -24,7 +24,7 @@ default = []
 serde = ["dep:serde"]
 
 [dependencies]
-rand = { version = "0.9", default-features = false, features = ["alloc"] }
+rand = { version = "0.9", default-features = false }
 rand_chacha = "0.9"
 serde = { version = "1", features = ["derive"], optional = true }
 
