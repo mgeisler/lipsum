@@ -182,7 +182,11 @@ impl<'a> MarkovChain<'a> {
     /// assert_eq!(iter.next(), Some("green"));
     /// assert_eq!(iter.next(), Some("blue"));
     /// ```
-    pub fn iter<R: Rng>(&self, mut rng: R, from: Option<Bigram<'a>>) -> Words<'_, R> {
+    pub fn iter<R: Rng + 'a>(
+        &'a self,
+        mut rng: R,
+        from: Option<Bigram<'a>>,
+    ) -> impl Iterator<Item = &'a str> + 'a {
         let state = from
             .filter(|f| self.map.contains_key(f))
             .unwrap_or_else(|| *self.keys.choose(&mut rng).unwrap_or(&("", "")));
@@ -205,7 +209,7 @@ fn default_rng() -> impl Rng {
 /// Never-ending iterator over words in the Markov chain.
 ///
 /// Generated with the [`MarkovChain::iter`] method.
-pub struct Words<'a, R: Rng> {
+struct Words<'a, R: Rng> {
     map: &'a HashMap<Bigram<'a>, Vec<&'a str>>,
     rng: R,
     keys: &'a Vec<Bigram<'a>>,
