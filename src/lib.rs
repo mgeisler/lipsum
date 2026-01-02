@@ -704,8 +704,12 @@ mod tests {
         // This is a bug, see #115.
         assert_eq!(generate_sentence(["foo", "--"].into_iter()), "Foo --");
     }
+}
 
-    #[cfg(feature = "serde")]
+#[cfg(all(test, feature = "serde"))]
+mod serde_tests {
+    use super::*;
+
     #[test]
     fn serde_support() {
         let mut chain = MarkovChain::new();
