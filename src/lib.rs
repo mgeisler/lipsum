@@ -326,6 +326,9 @@ thread_local! {
     }
 }
 
+/// The traditional starting point for lorem ipsum text.
+const LOREM_IPSUM_BIGRAM: Bigram<'static> = ("Lorem", "ipsum");
+
 /// Generate `n` words of lorem ipsum text. The output will always start with
 /// "Lorem ipsum".
 ///
@@ -369,8 +372,10 @@ pub fn lipsum(n: usize) -> String {
 ///
 /// [`thread_rng`]: https://docs.rs/rand/latest/rand/fn.thread_rng.html
 pub fn lipsum_with_rng(rng: impl Rng, n: usize) -> String {
-    LOREM_IPSUM_CHAIN
-        .with(|chain| generate_sentence(chain.iter(rng, Some(("Lorem", "ipsum"))).take(n)))
+    LOREM_IPSUM_CHAIN.with(|chain| {
+        let words = chain.iter(rng, Some(LOREM_IPSUM_BIGRAM)).take(n);
+        generate_sentence(words)
+    })
 }
 
 /// Generate `n` words of lorem ipsum text.
