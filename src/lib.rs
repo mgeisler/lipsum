@@ -727,3 +727,27 @@ mod tests {
         assert_eq!(chain, deserialized_chain);
     }
 }
+
+#[cfg(all(test, target_arch = "wasm32"))]
+mod wasm_tests {
+    use super::*;
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    #[wasm_bindgen_test]
+    fn lipsum_works_in_wasm() {
+        let text = lipsum(5);
+        assert!(text.starts_with("Lorem ipsum"));
+    }
+
+    #[wasm_bindgen_test]
+    fn lipsum_title_works_in_wasm() {
+        let text = lipsum_title();
+        assert_eq!(text, "Improbe Parta Minuit sed Potius Inflammat ut");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_lipsum_words_works_in_wasm() {
+        let text = lipsum_words(5);
+        assert_eq!(text.split_whitespace().count(), 5);
+    }
+}
