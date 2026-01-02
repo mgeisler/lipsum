@@ -71,9 +71,10 @@ impl<'a> MarkovChain<'a> {
     /// let mut rng = ChaCha20Rng::seed_from_u64(0);
     ///
     /// // The chain jumps consistently like this:
-    /// assert_eq!(chain.generate_with_rng(&mut rng, 1), "Orange.");
-    /// assert_eq!(chain.generate_with_rng(&mut rng, 1), "Infra-red.");
-    /// assert_eq!(chain.generate_with_rng(&mut rng, 1), "Blue.");
+    /// let mut iter = chain.iter(&mut rng, None);
+    /// assert_eq!(iter.next(), Some("orange"));
+    /// assert_eq!(iter.next(), Some("yellow"));
+    /// assert_eq!(iter.next(), Some("green"));
     /// # }
     /// ```
     pub fn new() -> MarkovChain<'a> {
@@ -160,134 +161,37 @@ impl<'a> MarkovChain<'a> {
         }
     }
 
-    /// Generate a sentence with `n` words of lorem ipsum text. The
-    /// sentence will start from a random point in the Markov chain
-    /// generated using the specified random number generator,
-    /// and a `.` will be added as necessary to form a full sentence.
-    ///
-    /// See [`generate_with_rng_from`] if you want to control the
-    /// starting point for the generated text and see [`iter_with_rng`]
-    /// if you simply want a sequence of words.
+    /// Make a never-ending iterator over the words in the Markov
+    /// chain. The iterator starts at the given bigram if provided and
+    /// if it exists in the chain. Otherwise, a random starting point
+    /// is chosen using the specified random number generator.
     ///
     /// # Examples
     ///
-    /// Generating the sounds of a grandfather clock:
-    ///
     /// ```
     /// use lipsum::MarkovChain;
-    /// use rand_chacha::ChaCha20Rng;
     /// use rand::SeedableRng;
+    /// use rand_chacha::ChaCha20Rng;
     ///
     /// let mut chain = MarkovChain::new();
-    /// chain.learn("Tick, Tock, Tick, Tock, Ding! Tick, Tock, Ding! Ding!");
-    /// println!("{}", chain.generate_with_rng(ChaCha20Rng::seed_from_u64(0), 15));
+    /// chain.learn("red green blue yellow");
+    ///
+    /// let mut rng = ChaCha20Rng::seed_from_u64(0);
+    /// let mut iter = chain.iter(rng, Some(("red", "green")));
+    /// assert_eq!(iter.next(), Some("red"));
+    /// assert_eq!(iter.next(), Some("green"));
+    /// assert_eq!(iter.next(), Some("blue"));
     /// ```
-    ///
-    /// The output looks like this:
-    ///
-    /// > Ding! Tick, Tock, Tick, Tock, Ding! Ding! Tock, Ding! Tick,
-    /// > Tock, Tick, Tock, Tick, Tock.
-    ///
-    /// [`generate_with_rng_from`]: struct.MarkovChain.html#method.generate_with_rng_from
-    /// [`iter_with_rng`]: struct.MarkovChain.html#method.iter_with_rng
-    pub fn generate_with_rng<R: Rng>(&self, rng: R, n: usize) -> String {
-        join_words(self.iter_with_rng(rng).take(n))
-    }
-
-    /// Generate a sentence with `n` words of lorem ipsum text. The sentence
-    /// will start from a predetermined point in the Markov chain generated
-    /// using the default random number generator and a `.` will be added as
-    /// necessary to form a full sentence.
-    ///
-    /// See [`generate_from`] if you want to control the starting point for the
-    /// generated text and see [`iter`] if you simply want a sequence of words.
-    ///
-    /// # Examples
-    ///
-    /// Generating the sounds of a grandfather clock:
-    ///
-    /// ```
-    /// use lipsum::MarkovChain;
-    ///
-    /// let mut chain = MarkovChain::new();
-    /// chain.learn("Tick, Tock, Tick, Tock, Ding! Tick, Tock, Ding! Ding!");
-    /// println!("{}", chain.generate(15));
-    /// ```
-    ///
-    /// The output looks like this:
-    ///
-    /// > Ding! Tick, Tock, Tick, Tock, Ding! Ding! Tock, Ding! Tick,
-    /// > Tock, Tick, Tock, Tick, Tock.
-    ///
-    /// [`generate_from`]: struct.MarkovChain.html#method.generate_from
-    /// [`iter`]: struct.MarkovChain.html#method.iter
-    pub fn generate(&self, n: usize) -> String {
-        self.generate_with_rng(default_rng(), n)
-    }
-
-    /// Generate a sentence with `n` words of lorem ipsum text. The
-    /// sentence will start from the given bigram and a `.` will be
-    /// added as necessary to form a full sentence.
-    ///
-    /// Use [`generate_with_rng`] if the starting point is not important. See
-    /// [`iter_with_rng_from`] if you want a sequence of words that you can
-    /// format yourself.
-    ///
-    /// [`generate_with_rng`]: struct.MarkovChain.html#method.generate_with_rng
-    /// [`iter_with_rng_from`]: struct.MarkovChain.html#method.iter_with_rng_from
-    pub fn generate_with_rng_from<R: Rng>(&self, rng: R, n: usize, from: Bigram<'a>) -> String {
-        join_words(self.iter_with_rng_from(rng, from).take(n))
-    }
-
-    /// Generate a sentence with `n` words of lorem ipsum text. The
-    /// sentence will start from the given bigram and a `.` will be
-    /// added as necessary to form a full sentence. If the bigram is
-    /// not found in the chain, a random one will be chosen.
-    ///
-    /// Use [`generate`] if the starting point is not important. See
-    /// [`iter_from`] if you want a sequence of words that you can
-    /// format yourself.
-    ///
-    /// [`generate`]: struct.MarkovChain.html#method.generate
-    /// [`iter_from`]: struct.MarkovChain.html#method.iter_from
-    pub fn generate_from(&self, n: usize, from: Bigram<'a>) -> String {
-        self.generate_with_rng_from(default_rng(), n, from)
-    }
-
-    /// Make a never-ending iterator over the words in the Markov
-    /// chain. The iterator starts at a random point in the chain.
-    pub fn iter_with_rng<R: Rng>(&self, rng: R) -> Words<'_, R> {
-        // Pass a non-existent bigram to `iter_with_rng_from`. This will
-        // cause it to pick a random starting point.
-        self.iter_with_rng_from(rng, ("", ""))
-    }
-
-    /// Make a never-ending iterator over the words in the Markov chain. The
-    /// iterator starts at a predetermined point in the chain.
-    pub fn iter(&self) -> Words<'_, impl Rng> {
-        self.iter_with_rng(default_rng())
-    }
-
-    /// Make a never-ending iterator over the words in the Markov
-    /// chain. The iterator starts at the given bigram.
-    pub fn iter_with_rng_from<R: Rng>(&self, mut rng: R, from: Bigram<'a>) -> Words<'_, R> {
-        let state = if self.map.contains_key(&from) {
-            from
-        } else {
-            *self.keys.choose(&mut rng).unwrap_or(&("", ""))
-        };
+    pub fn iter<R: Rng>(&self, mut rng: R, from: Option<Bigram<'a>>) -> Words<'_, R> {
+        let state = from
+            .filter(|f| self.map.contains_key(f))
+            .unwrap_or_else(|| *self.keys.choose(&mut rng).unwrap_or(&("", "")));
         Words {
             map: &self.map,
             rng,
             keys: &self.keys,
             state,
         }
-    }
-
-    /// Make a never-ending iterator over the words in the Markov
-    /// chain. The iterator starts at the given bigram.
-    pub fn iter_from(&self, from: Bigram<'a>) -> Words<'_, impl Rng> {
-        self.iter_with_rng_from(default_rng(), from)
     }
 }
 
@@ -300,10 +204,7 @@ fn default_rng() -> impl Rng {
 
 /// Never-ending iterator over words in the Markov chain.
 ///
-/// Generated with the [`iter`] or [`iter_from`] methods.
-///
-/// [`iter`]: struct.MarkovChain.html#method.iter
-/// [`iter_from`]: struct.MarkovChain.html#method.iter_from
+/// Generated with the [`MarkovChain::iter`] method.
 pub struct Words<'a, R: Rng> {
     map: &'a HashMap<Bigram<'a>, Vec<&'a str>>,
     rng: R,
@@ -349,10 +250,12 @@ fn capitalize(word: &str) -> String {
     result
 }
 
-/// Join words from an iterator. The first word is always capitalized
-/// and the generated sentence will end with `'.'` if it doesn't
-/// already end with some other ASCII punctuation character.
-fn join_words<'a, I: Iterator<Item = &'a str>>(mut words: I) -> String {
+/// Join words from an iterator into a sentence.
+///
+/// The first word is always capitalized and the generated sentence
+/// will end with `'.'` if it doesn't already end with some other
+/// ASCII punctuation character.
+fn generate_sentence<'a, I: Iterator<Item = &'a str>>(mut words: I) -> String {
     let Some(word) = words.next() else {
         return String::new();
     };
@@ -437,7 +340,7 @@ thread_local! {
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 /// [`lipsum_words`]: fn.lipsum_words.html
 pub fn lipsum(n: usize) -> String {
-    LOREM_IPSUM_CHAIN.with(|chain| chain.generate_from(n, ("Lorem", "ipsum")))
+    lipsum_with_rng(default_rng(), n)
 }
 
 /// Generate `n` words of lorem ipsum text with a custom RNG. The output will
@@ -462,7 +365,8 @@ pub fn lipsum(n: usize) -> String {
 ///
 /// [`thread_rng`]: https://docs.rs/rand/latest/rand/fn.thread_rng.html
 pub fn lipsum_with_rng(rng: impl Rng, n: usize) -> String {
-    LOREM_IPSUM_CHAIN.with(|chain| chain.generate_with_rng_from(rng, n, ("Lorem", "ipsum")))
+    LOREM_IPSUM_CHAIN
+        .with(|chain| generate_sentence(chain.iter(rng, Some(("Lorem", "ipsum"))).take(n)))
 }
 
 /// Generate `n` words of lorem ipsum text.
@@ -481,7 +385,7 @@ pub fn lipsum_with_rng(rng: impl Rng, n: usize) -> String {
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 pub fn lipsum_words(n: usize) -> String {
-    LOREM_IPSUM_CHAIN.with(|chain| chain.generate(n))
+    lipsum_words_with_rng(default_rng(), n)
 }
 
 /// Generate `n` words of lorem ipsum text with a custom RNG.
@@ -503,7 +407,7 @@ pub fn lipsum_words(n: usize) -> String {
 ///
 /// [`thread_rng`]: https://docs.rs/rand/latest/rand/fn.thread_rng.html
 pub fn lipsum_words_with_rng(rng: impl Rng, n: usize) -> String {
-    LOREM_IPSUM_CHAIN.with(|chain| chain.generate_with_rng(rng, n))
+    LOREM_IPSUM_CHAIN.with(|chain| generate_sentence(chain.iter(rng, None).take(n)))
 }
 
 /// Generate `n` words of lorem ipsum text with a deterministic seed.
@@ -613,7 +517,7 @@ pub fn lipsum_title_with_rng(mut rng: impl Rng) -> String {
         let mut title = String::with_capacity(8 * n);
 
         let words = chain
-            .iter_with_rng(rng)
+            .iter(rng, None)
             .map(|word| word.trim_matches(is_ascii_punctuation))
             .filter(|word| !word.is_empty())
             .take(n);
@@ -704,17 +608,18 @@ mod tests {
     #[test]
     fn empty_chain() {
         let chain = MarkovChain::new();
-        assert_eq!(chain.generate(10), "");
+        let words = chain.iter(default_rng(), None).take(10);
+        assert_eq!(generate_sentence(words), "");
     }
 
     #[test]
     fn generate_from() {
         let mut chain = MarkovChain::new();
         chain.learn("red orange yellow green blue indigo violet");
-        assert_eq!(
-            chain.generate_from(5, ("orange", "yellow")),
-            "Orange yellow green blue indigo."
-        );
+        let words = chain
+            .iter(default_rng(), Some(("orange", "yellow")))
+            .take(5);
+        assert_eq!(generate_sentence(words), "Orange yellow green blue indigo.");
     }
 
     #[test]
@@ -726,7 +631,8 @@ mod tests {
         // back to "xxx yyy".
         let mut chain = MarkovChain::new();
         chain.learn("xxx yyy zzz");
-        assert_ne!(chain.generate_from(3, ("xxx", "yyy")), "xxx yyy zzz");
+        let words = chain.iter(default_rng(), Some(("xxx", "yyy"))).take(3);
+        assert_ne!(generate_sentence(words), "xxx yyy zzz");
     }
 
     #[test]
@@ -735,7 +641,8 @@ mod tests {
         // point that doesn't exist in the chain.
         let mut chain = MarkovChain::new();
         chain.learn("foo bar baz");
-        chain.generate_from(3, ("xxx", "yyy"));
+        let words = chain.iter(default_rng(), Some(("xxx", "yyy"))).take(3);
+        generate_sentence(words);
     }
 
     #[test]
@@ -757,7 +664,7 @@ mod tests {
         chain.learn("foo bar a b c");
 
         assert_eq!(
-            chain.generate_with_rng(rng, 15),
+            generate_sentence(chain.iter(rng, None).take(15)),
             "A b bar a b x y y b bar x y y b x."
         );
     }
@@ -768,27 +675,25 @@ mod tests {
         chain.learn("one two three four five six seven");
         // This bigram is not in the chain.
         let mut rng = ChaCha20Rng::seed_from_u64(123);
-        assert_eq!(
-            chain.generate_with_rng_from(&mut rng, 3, ("zero", "one")),
-            "Three four five."
-        );
+        let words = chain.iter(&mut rng, Some(("zero", "one"))).take(3);
+        assert_eq!(generate_sentence(words), "Three four five.");
     }
 
     #[test]
     fn join_words_add_full_stop() {
-        assert_eq!(join_words(["foo", "bar"].into_iter()), "Foo bar.");
+        assert_eq!(generate_sentence(["foo", "bar"].into_iter()), "Foo bar.");
     }
 
     #[test]
     fn join_words_keeps_punctuation() {
-        assert_eq!(join_words(["foo", "bar!"].into_iter()), "Foo bar!");
+        assert_eq!(generate_sentence(["foo", "bar!"].into_iter()), "Foo bar!");
     }
 
     #[test]
     #[should_panic]
     fn join_words_keeps_dash_word() {
         // This is a bug, see #115.
-        assert_eq!(join_words(["foo", "--"].into_iter()), "Foo --");
+        assert_eq!(generate_sentence(["foo", "--"].into_iter()), "Foo --");
     }
 
     #[cfg(feature = "serde")]
