@@ -45,6 +45,16 @@ jobs:
         if: matrix.rust == 'nightly'
         run: cargo check --all-targets
 
+  wasm:
+    name: WebAssembly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Test
+        run: wasm-pack test --node
+
   msrv:
     name: Build MSRV
     runs-on: ubuntu-latest
