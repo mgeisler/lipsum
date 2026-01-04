@@ -30,10 +30,29 @@
 use rand::seq::IndexedRandom;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 /// A bigram is simply two consecutive words.
 pub type Bigram<'a> = (&'a str, &'a str);
+
+thread_local! {
+    /// A default random number generator. The generator is seeded by the
+    /// current time if available, or a constant seed otherwise.
+    static DEFAULT_RNG: RefCell<ChaCha20Rng> = {
+        // `SystemTime::now` panics on Wasm.
+        let seed = if cfg!(not(target_arch = "wasm32")) {
+            use std::time::{SystemTime, UNIX_EPOCH};
+            match SystemTime::now().duration_since(UNIX_EPOCH) {
+                Ok(duration) => duration.as_nanos() as u64,
+                Err(_) => 97,
+            }
+        } else {
+            97
+        };
+        RefCell::new(ChaCha20Rng::seed_from_u64(seed))
+    };
+}
 
 /// Simple order two Markov chain implementation.
 ///
@@ -199,13 +218,6 @@ impl<'a> MarkovChain<'a> {
     }
 }
 
-/// Provide a default random number generator. This generator is seeded and will
-/// always produce the same sequence of numbers. The seed is chosen to yield
-/// good results for the included Markov chain.
-fn default_rng() -> impl Rng {
-    ChaCha20Rng::seed_from_u64(97)
-}
-
 /// Never-ending iterator over words in the Markov chain.
 ///
 /// Generated with the [`MarkovChain::iter`] method.
@@ -333,8 +345,8 @@ const LOREM_IPSUM_BIGRAM: Bigram<'static> = ("Lorem", "ipsum");
 /// "Lorem ipsum".
 ///
 /// The text continues with the standard lorem ipsum text from [`LOREM_IPSUM`]
-/// and becomes randomly generated but deterministic if more than 18 words is
-/// requested. See [`lipsum_words`] if fully random text is needed.
+/// and becomes random if more than 18 words is requested. See
+/// [`lipsum_words`] if fully random text is needed.
 ///
 /// # Examples
 ///
@@ -347,7 +359,7 @@ const LOREM_IPSUM_BIGRAM: Bigram<'static> = ("Lorem", "ipsum");
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 /// [`lipsum_words`]: fn.lipsum_words.html
 pub fn lipsum(n: usize) -> String {
-    lipsum_with_rng(default_rng(), n)
+    DEFAULT_RNG.with(|rng| lipsum_with_rng(rng.borrow_mut(), n))
 }
 
 /// Generate `n` words of lorem ipsum text with a custom RNG. The output will
@@ -380,21 +392,20 @@ pub fn lipsum_with_rng(rng: impl Rng, n: usize) -> String {
 
 /// Generate `n` words of lorem ipsum text.
 ///
-/// The text is deterministically sampled from a Markov chain based on
-/// [`LOREM_IPSUM`]. Multiple sentences may be generated, depending on the
-/// punctuation of the words being selected.
+/// The text starts with a random word from [`LOREM_IPSUM`]. Multiple sentences
+/// may be generated, depending on the punctuation of the words being selected.
 ///
 /// # Examples
 ///
 /// ```
 /// use lipsum::lipsum_words;
 ///
-/// assert_eq!(lipsum_words(6), "Ullus investigandi veri, nisi inveneris, et.");
+/// assert_eq!(lipsum_words(6).split_whitespace().count(), 6);
 /// ```
 ///
 /// [`LOREM_IPSUM`]: constant.LOREM_IPSUM.html
 pub fn lipsum_words(n: usize) -> String {
-    lipsum_words_with_rng(default_rng(), n)
+    DEFAULT_RNG.with(|rng| lipsum_words_with_rng(rng.borrow_mut(), n))
 }
 
 /// Generate `n` words of lorem ipsum text with a custom RNG.
@@ -479,7 +490,7 @@ const TITLE_SMALL_WORD: usize = 3;
 /// ```
 /// use lipsum::lipsum_title;
 ///
-/// println!("{}", lipsum_title());
+/// assert!(lipsum_title().len() > 0);
 /// ```
 ///
 /// This will generate a string like
@@ -489,7 +500,7 @@ const TITLE_SMALL_WORD: usize = 3;
 /// which should be suitable for use in a document title for section
 /// heading.
 pub fn lipsum_title() -> String {
-    lipsum_title_with_rng(default_rng())
+    DEFAULT_RNG.with(|rng| lipsum_title_with_rng(rng.borrow_mut()))
 }
 
 /// Generate a short lorem ipsum text with words in title case with a custom RNG.
@@ -616,18 +627,18 @@ mod tests {
 
     #[test]
     fn empty_chain() {
+        let rng = ChaCha20Rng::seed_from_u64(97);
         let chain = MarkovChain::new();
-        let words = chain.iter(default_rng(), None).take(10);
+        let words = chain.iter(rng, None).take(10);
         assert_eq!(generate_sentence(words), "");
     }
 
     #[test]
     fn generate_from() {
+        let rng = ChaCha20Rng::seed_from_u64(97);
         let mut chain = MarkovChain::new();
         chain.learn("red orange yellow green blue indigo violet");
-        let words = chain
-            .iter(default_rng(), Some(("orange", "yellow")))
-            .take(5);
+        let words = chain.iter(rng, Some(("orange", "yellow"))).take(5);
         assert_eq!(generate_sentence(words), "Orange yellow green blue indigo.");
     }
 
@@ -638,9 +649,10 @@ mod tests {
         // one would expect. The chain moves from state "xxx yyy" to
         // "yyy zzz", but sees that as invalid state and resets itself
         // back to "xxx yyy".
+        let rng = ChaCha20Rng::seed_from_u64(97);
         let mut chain = MarkovChain::new();
         chain.learn("xxx yyy zzz");
-        let words = chain.iter(default_rng(), Some(("xxx", "yyy"))).take(3);
+        let words = chain.iter(rng, Some(("xxx", "yyy"))).take(3);
         assert_ne!(generate_sentence(words), "xxx yyy zzz");
     }
 
@@ -648,9 +660,10 @@ mod tests {
     fn generate_from_no_panic() {
         // No panic when asked to generate a chain from a starting
         // point that doesn't exist in the chain.
+        let rng = ChaCha20Rng::seed_from_u64(97);
         let mut chain = MarkovChain::new();
         chain.learn("foo bar baz");
-        let words = chain.iter(default_rng(), Some(("xxx", "yyy"))).take(3);
+        let words = chain.iter(rng, Some(("xxx", "yyy"))).take(3);
         generate_sentence(words);
     }
 
@@ -686,6 +699,16 @@ mod tests {
         let mut rng = ChaCha20Rng::seed_from_u64(123);
         let words = chain.iter(&mut rng, Some(("zero", "one"))).take(3);
         assert_eq!(generate_sentence(words), "Three four five.");
+    }
+
+    #[test]
+    fn repeated_lipsum_words_calls_give_different_results() {
+        // TODO: add a similar test for `lipsum`. It currently doesn't
+        // work since the text is fixed for the first ~20 words, and
+        // only changes in small ways after this.
+        let text1 = lipsum_words(10);
+        let text2 = lipsum_words(10);
+        assert_ne!(text1, text2);
     }
 
     #[test]
@@ -746,12 +769,19 @@ mod wasm_tests {
     #[wasm_bindgen_test]
     fn lipsum_title_works_in_wasm() {
         let text = lipsum_title();
-        assert_eq!(text, "Improbe Parta Minuit sed Potius Inflammat ut");
+        assert!(!text.is_empty());
     }
 
     #[wasm_bindgen_test]
     fn test_lipsum_words_works_in_wasm() {
         let text = lipsum_words(5);
         assert_eq!(text.split_whitespace().count(), 5);
+    }
+
+    #[wasm_bindgen_test]
+    fn repeated_lipsum_words_calls_give_different_results() {
+        let text1 = lipsum_words(10);
+        let text2 = lipsum_words(10);
+        assert_ne!(text1, text2);
     }
 }
