@@ -27,9 +27,9 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+use rand::rngs::ChaCha20Rng;
 use rand::seq::IndexedRandom;
-use rand::{Rng, SeedableRng};
-use rand_chacha::ChaCha20Rng;
+use rand::{Rng, RngExt, SeedableRng};
 use std::cell::RefCell;
 use std::collections::HashMap;
 
@@ -82,7 +82,7 @@ impl<'a> MarkovChain<'a> {
     /// # fn main() {
     /// use lipsum::MarkovChain;
     /// use rand::SeedableRng;
-    /// use rand_chacha::ChaCha20Rng;
+    /// use rand::rngs::ChaCha20Rng;
     ///
     /// let mut chain = MarkovChain::new();
     /// chain.learn("infra-red red orange yellow green blue indigo x-ray");
@@ -190,7 +190,7 @@ impl<'a> MarkovChain<'a> {
     /// ```
     /// use lipsum::MarkovChain;
     /// use rand::SeedableRng;
-    /// use rand_chacha::ChaCha20Rng;
+    /// use rand::rngs::ChaCha20Rng;
     ///
     /// let mut chain = MarkovChain::new();
     /// chain.learn("red green blue yellow");
@@ -366,7 +366,7 @@ pub fn lipsum(n: usize) -> String {
 /// always start with "Lorem ipsum".
 ///
 /// A custom RNG allows to base the markov chain on a different random number
-/// sequence. This also allows using a regular [`thread_rng`] random number
+/// sequence. This also allows using a regular [`rng`] random number
 /// generator. If that generator is used, the text will differ in each
 /// invocation.
 ///
@@ -374,15 +374,15 @@ pub fn lipsum(n: usize) -> String {
 ///
 /// ```
 /// use lipsum::lipsum_with_rng;
-/// use rand::thread_rng;
+/// use rand::rng;
 ///
-/// println!("{}", lipsum_with_rng(thread_rng(), 23));
+/// println!("{}", lipsum_with_rng(rng(), 23));
 /// // -> "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
 /// //     eiusmod tempor incididunt ut labore et dolore magnam aliquam
 /// //     quaerat voluptatem. Ut enim."
 /// ```
 ///
-/// [`thread_rng`]: https://docs.rs/rand/latest/rand/fn.thread_rng.html
+/// [`rng`]: https://docs.rs/rand/latest/rand/fn.rng.html
 pub fn lipsum_with_rng(rng: impl Rng, n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|chain| {
         let words = chain.iter(rng, Some(LOREM_IPSUM_BIGRAM)).take(n);
@@ -411,7 +411,7 @@ pub fn lipsum_words(n: usize) -> String {
 /// Generate `n` words of lorem ipsum text with a custom RNG.
 ///
 /// A custom RNG allows to base the markov chain on a different random number
-/// sequence. This also allows using a regular [`thread_rng`] random number
+/// sequence. This also allows using a regular [`rng`] random number
 /// generator. If that generator is used, the text will differ in each
 /// invocation.
 ///
@@ -419,13 +419,13 @@ pub fn lipsum_words(n: usize) -> String {
 ///
 /// ```
 /// use lipsum::lipsum_words_with_rng;
-/// use rand::thread_rng;
+/// use rand::rng;
 ///
-/// println!("{}", lipsum_words_with_rng(thread_rng(), 7));
+/// println!("{}", lipsum_words_with_rng(rng(), 7));
 /// // -> "Quot homines, tot sententiae; falli igitur possumus."
 /// ```
 ///
-/// [`thread_rng`]: https://docs.rs/rand/latest/rand/fn.thread_rng.html
+/// [`rng`]: https://docs.rs/rand/latest/rand/fn.rng.html
 pub fn lipsum_words_with_rng(rng: impl Rng, n: usize) -> String {
     LOREM_IPSUM_CHAIN.with(|chain| generate_sentence(chain.iter(rng, None).take(n)))
 }
@@ -506,7 +506,7 @@ pub fn lipsum_title() -> String {
 /// Generate a short lorem ipsum text with words in title case with a custom RNG.
 ///
 /// A custom RNG allows to base the markov chain on a different random number
-/// sequence. This also allows using a regular [`thread_rng`] random number
+/// sequence. This also allows using a regular [`rng`] random number
 /// generator. If that generator is used, the text will differ in each
 /// invocation.
 ///
@@ -516,9 +516,9 @@ pub fn lipsum_title() -> String {
 ///
 /// ```
 /// use lipsum::lipsum_title_with_rng;
-/// use rand::thread_rng;
+/// use rand::rng;
 ///
-/// println!("{}", lipsum_title_with_rng(thread_rng()));
+/// println!("{}", lipsum_title_with_rng(rng()));
 /// ```
 ///
 /// This will generate a string like
@@ -528,7 +528,7 @@ pub fn lipsum_title() -> String {
 /// which should be suitable for use in a document title for section
 /// heading.
 ///
-/// [`thread_rng`]: https://docs.rs/rand/latest/rand/fn.thread_rng.html
+/// [`rng`]: https://docs.rs/rand/latest/rand/fn.rng.html
 pub fn lipsum_title_with_rng(mut rng: impl Rng) -> String {
     LOREM_IPSUM_CHAIN.with(|chain| {
         let n = rng.random_range(TITLE_MIN_WORDS..TITLE_MAX_WORDS);
