@@ -9,7 +9,7 @@ keywords = ["random", "text", "markov", "typography"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/mgeisler/lipsum/"
-rust-version = "1.65"
+rust-version = "1.85"
 description = """
 Lipsum is a lorem ipsum text generation library. It generates
 pseudo-random Latin text. Use this if you need filler or dummy text
@@ -24,15 +24,14 @@ default = []
 serde = ["dep:serde"]
 
 [dependencies]
-rand = { version = "0.9", default-features = false }
-rand_chacha = "0.9"
+rand = { version = "0.10", default-features = false, features = ["chacha"] }
 serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
 postcard = { version = "1.1.3", features = ["alloc"] }
-rand = "0.9"
+rand = "0.10"
 version-sync = "0.9.4"
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dev-dependencies]
 wasm-bindgen-test = "0.3"
-getrandom = { version = "0.3", features = ["wasm_js"] }
+getrandom = { version = "0.4", features = ["wasm_js"] }
